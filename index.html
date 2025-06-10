@@ -5,64 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="shortcut icon" href="assets/images/Icon.png" sizes="64x64" type="image/png" />
     <title>Zipping Farm</title>
-    <link rel="stylesheet" href="public/main.css" />
+    <link rel="stylesheet" href="public/style.css" />
 
-    <!-- 
-        es-module-shims giúp các trình duyệt cũ hơn hiểu importmap.
-        Nó nên được tải bất đồng bộ (async) trước khi importmap được xử lý.
-    -->
+</head>
+<body>
+    <div id="root-window">
+        <div id="render-target"></div>
+    </div>
+
     <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 
-    <!-- 
-        importmap định nghĩa cách các tên module ngắn gọn (như 'three', 'cannon-es')
-        được ánh xạ tới các URL đầy đủ của chúng.
-        Điều này giúp mã JavaScript của bạn sạch hơn và dễ đọc hơn.
-    -->
     <script type="importmap">
     {
         "imports": {
             "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
             "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/",
-            "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+            "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js",
+            "rapier3d": "https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.17.3"
         }
     }
     </script>
-    <style>
-        /* Đảm bảo body không có margin và overflow được ẩn để canvas chiếm toàn bộ không gian */
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-        }
-        /* Container render-target sẽ chứa canvas */
-        #render-target {
-            width: 100vw; /* Chiếm toàn bộ chiều rộng viewport */
-            height: 100vh; /* Chiếm toàn bộ chiều cao viewport */
-            display: block;
-        }
-        /* Đảm bảo canvas hiển thị dưới dạng block và chiếm toàn bộ render-target */
-        canvas { 
-            display: block; 
-            width: 100%; 
-            height: 100%; 
-        }
-    </style>
-</head>
-<body>
-    <div id="root-window">
-        <!-- Canvas của Three.js sẽ được thêm vào trong div này -->
-        <div id="render-target"></div>         
-    </div>
 
-    <!-- 
-        Đây là điểm nhập chính cho ứng dụng JavaScript của bạn.
-        'type="module"' cho phép sử dụng cú pháp ES Modules.
-        main.js bây giờ nằm trong thư mục 'src'.
-    -->
-    <!-- <script type="module" src="/src/main.js"></script> -->
-    <script type="module" src="src/main_01.js"></script>
-    <!-- <script type="module" src="/src/main_02.js"></script> -->
-    <!-- <script type="module" src="/src/name.js"></script> -->
-
-
+    <script type="module" src="src/main.js"></script>
 </body>
 </html>

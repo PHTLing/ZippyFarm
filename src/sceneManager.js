@@ -21,10 +21,10 @@ export class SceneManager {
         this.isDebugMode = false;
 
         this.TRIMESH_PARENT_NAMES = [
-            'Nui_01', 'Cay01', 'Cay_02', 'Cay_03', 'CotDen','plane','Plane', 'duck', 'Z','I','P','I','N','G','F','A','R','M'
+            'Nui_01', 'Cay01', 'Cay_02', 'Cay_03', 'CotDen','plane','Plane', 'duck', 'Z','I','P','I','N','G','F','A','R','M', 'Bridge-wooden-lighter001'
         ];
         this.FALLABLE_OBJECT_NAMES = ['Cay01', 'Cay_02', 'Cay_03', 'CotDen', 'duck', 'Z','I','P','I','N','G','F','A','R','M'];
-        this.STATIC_TRIMESH_NAMES = ['Nui_01', 'plane'];
+        this.STATIC_TRIMESH_NAMES = ['Nui_01', 'plane', 'Bridge-wooden-lighter001'];
 
         this.gltfObjectsMap = new Map();
     }
@@ -36,8 +36,8 @@ export class SceneManager {
         await Promise.all([truckLoadPromise, farmLoadPromise]);
 
         // Thêm ground debug mesh vào scene
-        const groundDebugMesh = await this.physicsManager.setupWorld();
-        this.scene.add(groundDebugMesh);
+        // const groundDebugMesh = await this.physicsManager.setupWorld();
+        // this.scene.add(groundDebugMesh);
 
         this.updateDebugModeVisuals(); // Gọi sau khi tất cả assets đã được tải và gán physics info
 
@@ -55,7 +55,7 @@ export class SceneManager {
 
     async loadTruck() {
         return new Promise((resolve, reject) => {
-            this.loader.load('assets/Truck.glb', (gltf) => {
+            this.loader.load('assets/models/Truck.glb', (gltf) => {
                 this.truckMesh = gltf.scene;
                 this.truckMesh.scale.set(1, 1, 1);
                 this.truckMesh.position.set(-10, 15, -10);
@@ -147,7 +147,7 @@ export class SceneManager {
 
     async loadFarm() {
         return new Promise((resolve, reject) => {
-            this.loader.load('assets/Farm_N.glb', (gltf) => {
+            this.loader.load('assets/models/Farm_N.glb', (gltf) => {
                 const farmScene = gltf.scene;
                 farmScene.position.set(0, 0, 0);
                 farmScene.updateMatrixWorld(true);
