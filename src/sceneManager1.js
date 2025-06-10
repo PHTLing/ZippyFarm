@@ -103,7 +103,7 @@ export class SceneManager {
         (gltf) => {
           this.truckMesh = gltf.scene;
 
-          this.truckMesh.scale.set(1, 1, 1);
+          this.truckMesh.scale.set(2, 2, 2);
 
           this.truckMesh.position.set(-10, 15, -10);
 
@@ -237,7 +237,7 @@ export class SceneManager {
   async loadFarm() {
     return new Promise((resolve, reject) => {
       this.loader.load(
-        "assets/models/Farm_N.glb",
+        "assets/models/Map_Farm.glb",
         (gltf) => {
           const farmScene = gltf.scene;
 

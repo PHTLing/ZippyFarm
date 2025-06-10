@@ -121,7 +121,7 @@ let truckMesh;
 let truckBody;
 const loader = new GLTFLoader();
 
-loader.load('assets/Truck.glb', function (gltf) {
+loader.load('assets/models/Truck.glb', function (gltf) {
     truckMesh = gltf.scene;
     truckMesh.scale.set(0.5, 0.5, 0.5);
     truckMesh.position.set(-5, 0.5, -5); // Đặt xe ở vị trí ban đầu
@@ -157,7 +157,7 @@ const TRIMESH_PARENT_NAMES = [
     'Nui_01', 'Cay01', 'Cay_02', 'Cay_03', 'CotDen'
 ];
 
-loader.load('assets/Farm_N.glb', function (gltf) {
+loader.load('assets/models/Farm_N.glb', function (gltf) {
     const farmScene = gltf.scene;
     // Cần cập nhật ma trận thế giới của farmScene và tất cả các đối tượng con
     // Đảm bảo farmScene ở vị trí 0,0,0 nếu không có ý định dịch chuyển nó

@@ -1,1 +1,2 @@
 # ZippyFarm
+npm install

@@ -99,7 +99,7 @@ export class PhysicsManager {
         const collider = this.world.createCollider(colliderDesc, rigidBody);
 
         const debugGeometry = new THREE.BoxGeometry(halfExtents.x * 2, halfExtents.y * 2, halfExtents.z * 2);
-        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: true, transparent: true, opacity: 1.0 });
+        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: false, transparent: true, opacity: 1.0 });
         const debugMesh = new THREE.Mesh(debugGeometry, debugMaterial);
         debugMesh.position.copy(position);
         if (quaternion) debugMesh.quaternion.copy(quaternion);
@@ -132,7 +132,7 @@ export class PhysicsManager {
         const collider = this.world.createCollider(colliderDesc, rigidBody);
 
         const debugGeometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
-        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: true, transparent: true, opacity: 1.0 });
+        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: false, transparent: true, opacity: 1.0 });
         const debugMesh = new THREE.Mesh(debugGeometry, debugMaterial);
         debugMesh.position.copy(position);
 
@@ -164,7 +164,7 @@ export class PhysicsManager {
         const collider = this.world.createCollider(colliderDesc, rigidBody);
 
         const debugGeometry = new THREE.SphereGeometry(radius, 16, 16);
-        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: true, transparent: true, opacity: 1.0 });
+        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: false, transparent: true, opacity: 1.0 });
         const debugMesh = new THREE.Mesh(debugGeometry, debugMaterial);
         debugMesh.position.copy(position);
 
@@ -242,7 +242,7 @@ export class PhysicsManager {
         const debugGeometry = new THREE.BufferGeometry();
         debugGeometry.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(combinedDebugVertices), 3));
         debugGeometry.setIndex(new THREE.Uint32BufferAttribute(new Uint32Array(combinedDebugIndices), 1));
-        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: true, transparent: 1.0 });
+        const debugMaterial = new THREE.MeshBasicMaterial({ color: debugColor, wireframe: false, transparent: 1.0 });
 
         const debugMesh = new THREE.Mesh(debugGeometry, debugMaterial);
         debugMesh.position.copy(position);
