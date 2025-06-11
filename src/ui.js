@@ -17,7 +17,7 @@ const LoadingScreen = ({ onLoaded }) => {
         }
         return prev + 1;
       });
-    }, 45);
+    }, 30);
 
     return () => clearInterval(interval);
   }, []);
@@ -25,7 +25,6 @@ const LoadingScreen = ({ onLoaded }) => {
   return (
     <div className="screen loading-screen">
       <img src="assets/images/Logo.png" alt="Game Logo" className="logo" />
-
       {!loadingComplete ? (
         <div className="loading-container">
           <div className="loading-bar-background">
@@ -53,8 +52,7 @@ const LoadingScreen = ({ onLoaded }) => {
 //================================================================
 // Màn hình Chọn Xe
 //================================================================
-const VehicleSelectionScreen = ({ onSelect, onBack }) => {
-  // --- Đã thêm Big_truck vào đây ---
+const VehicleSelectionScreen = ({ onSelect, onBack, previewManager }) => {
   const vehicles = [
     { name: "Car", image: "assets/images/car.png" },
     { name: "Truck", image: "assets/images/truck.png" },
@@ -63,20 +61,67 @@ const VehicleSelectionScreen = ({ onSelect, onBack }) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [color, setColor] = useState("#ffdd00");
+
+  // THAY ĐỔI: Dùng state để quản lý file và URL của texture
+  const [textureFile, setTextureFile] = useState(null);
   const [textureName, setTextureName] = useState("");
+
   const fileInputRef = useRef(null);
+
+  // useEffect để quản lý việc attach/detach
+  useEffect(() => {
+    if (previewManager) {
+      previewManager.attach("vehicle-preview-canvas");
+      // Tải model ban đầu với màu hiện tại
+      previewManager.loadVehicle(vehicles[currentIndex].name, { color: color });
+    }
+    return () => {
+      if (previewManager) {
+        previewManager.detach();
+      }
+    };
+  }, [previewManager]);
+
+  // useEffect để tải lại model khi người dùng bấm next/prev
+  useEffect(() => {
+    if (previewManager) {
+      // Khi đổi xe, ưu tiên áp dụng texture nếu có, nếu không thì dùng màu hiện tại
+      const customization = textureFile
+        ? { textureURL: URL.createObjectURL(textureFile) }
+        : { color: color };
+      previewManager.loadVehicle(vehicles[currentIndex].name, customization);
+    }
+  }, [currentIndex, previewManager]);
+
+  // THÊM: useEffect để cập nhật MÀU SẮC cho model preview
+  useEffect(() => {
+    // Chỉ cập nhật màu nếu manager đã sẵn sàng và KHÔNG có texture nào được chọn
+    if (previewManager && !textureFile) {
+      previewManager.applyCustomization({ color: color });
+    }
+  }, [color, textureFile, previewManager]);
+
+  // THÊM: useEffect để cập nhật TEXTURE cho model preview
+  useEffect(() => {
+    if (previewManager && textureFile) {
+      const url = URL.createObjectURL(textureFile);
+      previewManager.applyCustomization({ textureURL: url });
+
+      // Quan trọng: thu hồi URL cũ để tránh rò rỉ bộ nhớ
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [textureFile, previewManager]);
 
   const handleNext = () =>
     setCurrentIndex((prev) => (prev + 1) % vehicles.length);
   const handlePrev = () =>
     setCurrentIndex((prev) => (prev - 1 + vehicles.length) % vehicles.length);
 
+  // THAY ĐỔI: Cập nhật state của texture
   const handleTextureUpload = (event) => {
-    if (event.target.files && event.target.files[0]) {
-      setTextureName(event.target.files[0].name);
-    } else {
-      setTextureName("");
-    }
+    const file = event.target.files?.[0] || null;
+    setTextureFile(file);
+    setTextureName(file ? file.name : "");
   };
 
   const handleSelection = () => {
@@ -84,13 +129,11 @@ const VehicleSelectionScreen = ({ onSelect, onBack }) => {
       type: vehicles[currentIndex].name,
       image: vehicles[currentIndex].image,
       color: color,
-      texture: fileInputRef.current.files[0]
-        ? URL.createObjectURL(fileInputRef.current.files[0])
-        : null,
+      // Dùng textureFile từ state để tạo URL mới cho game chính
+      texture: textureFile ? URL.createObjectURL(textureFile) : null,
     });
   };
 
-  // Lấy tên xe hiện tại và thay thế dấu gạch dưới bằng khoảng trắng
   const currentVehicleName = vehicles[currentIndex].name.replace("_", " ");
 
   return (
@@ -102,12 +145,7 @@ const VehicleSelectionScreen = ({ onSelect, onBack }) => {
             ‹
           </button>
           <div className="vehicle-image-container">
-            <img
-              src={vehicles[currentIndex].image}
-              alt={vehicles[currentIndex].name}
-              className="vehicle-image"
-            />
-            {/* --- THÊM DÒNG NÀY ĐỂ HIỂN THỊ TÊN XE --- */}
+            <div id="vehicle-preview-canvas"></div>
             <h2 className="vehicle-name">{currentVehicleName}</h2>
           </div>
           <button className="arrow-button" onClick={handleNext}>
@@ -165,7 +203,6 @@ const VehicleSelectionScreen = ({ onSelect, onBack }) => {
 //================================================================
 const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
   const vehicleImage = vehicle.image;
-
   const KeyIcon = ({ children }) => <div className="key-icon">{children}</div>;
 
   return (
@@ -232,10 +269,16 @@ const App = () => {
   const [gameState, setGameState] = useState("loading");
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
+  const previewManagerRef = useRef(null);
+  useEffect(() => {
+    if (!previewManagerRef.current && window.VehiclePreviewManager) {
+      previewManagerRef.current = new window.VehiclePreviewManager();
+    }
+  }, []);
+
   useEffect(() => {
     const uiContainer = document.getElementById("ui-root");
     const gameContainer = document.getElementById("root-window");
-
     if (gameState === "inGame") {
       uiContainer.style.display = "none";
       gameContainer.style.display = "block";
@@ -243,7 +286,6 @@ const App = () => {
       uiContainer.style.display = "block";
       gameContainer.style.display = "none";
     }
-
     const handleExit = () => setGameState("selectVehicle");
     window.addEventListener("exitToMenu", handleExit);
     return () => window.removeEventListener("exitToMenu", handleExit);
@@ -270,6 +312,7 @@ const App = () => {
         <VehicleSelectionScreen
           onSelect={handleVehicleSelect}
           onBack={() => setGameState("loading")}
+          previewManager={previewManagerRef.current}
         />
       )}
       {gameState === "instructions" && (

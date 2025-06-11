@@ -343,3 +343,16 @@ canvas {
   background-color: rgba(0, 0, 0, 0.6);
   font-weight: bold;
 }
+
+/* Container cho canvas preview 3D */
+#vehicle-preview-canvas {
+  width: 450px; /* Chiều rộng của khu vực preview */
+  height: 300px; /* Chiều cao của khu vực preview */
+  cursor: grab; /* Thay đổi con trỏ chuột khi hover */
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1); /* Một chút nền để dễ nhìn */
+}
+
+#vehicle-preview-canvas:active {
+  cursor: grabbing;
+}

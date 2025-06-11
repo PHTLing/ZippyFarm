@@ -10,9 +10,7 @@
       type="image/png"
     />
     <title>Zipping Farm</title>
-    <!-- Link đến file CSS chính -->
     <link rel="stylesheet" href="public/style.css" />
-    <!-- Thêm font từ Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -21,15 +19,12 @@
     />
   </head>
   <body>
-    <!-- Container cho giao diện React -->
     <div id="ui-root"></div>
 
-    <!-- Container cho game 3D (ẩn mặc định) -->
     <div id="root-window">
       <div id="render-target"></div>
     </div>
 
-    <!-- Import map cho các module JavaScript của game -->
     <script
       async
       src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"
@@ -44,7 +39,6 @@
       }
     </script>
 
-    <!-- Thêm CDN cho React và ReactDOM -->
     <script
       src="https://unpkg.com/react@18/umd/react.development.js"
       crossorigin
@@ -54,13 +48,12 @@
       crossorigin
     ></script>
 
-    <!-- Thêm Babel để biên dịch JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Liên kết đến file game logic chính -->
     <script type="module" src="src/main.js"></script>
 
-    <!-- Liên kết đến file UI React (với type="text/babel") -->
+    <script type="module" src="src/vehiclePreviewManager.js"></script>
+
     <script type="text/babel" src="src/ui.js"></script>
   </body>
 </html>
