@@ -84,7 +84,7 @@ export class SceneManager {
 
     async loadTruck() {
         return new Promise((resolve, reject) => {
-            this.loader.load('assets/models/Truck.glb', (gltf) => {
+            this.loader.load('assets/models/Car.glb', (gltf) => {
                 this.truckMesh = gltf.scene;
                 this.truckMesh.scale.set(1, 1, 1);
                 this.truckMesh.position.set(0, 5, 0);
