@@ -38,7 +38,9 @@ function setupThreeJS(renderTarget) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 0.5, 0);
+    controls.minPolarAngle = 0; // Góc thấp nhất là nhìn ngang
+    controls.maxPolarAngle = Math.PI * 0.49; // Giới hạn góc nhìn không cho nhìn xuống dưới xe
+    controls.target.set(-80, 0.5, -80);
     controls.update();
     controls.enabled = false; // Tắt điều khiển camera mặc định khi bắt đầu
 
