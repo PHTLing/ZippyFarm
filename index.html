@@ -1,31 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="assets/images/Icon.png" sizes="64x64" type="image/png" />
+    <link
+      rel="shortcut icon"
+      href="assets/images/Icon.png"
+      sizes="64x64"
+      type="image/png"
+    />
     <title>Zipping Farm</title>
+    <!-- Link đến file CSS chính -->
     <link rel="stylesheet" href="public/style.css" />
+    <!-- Thêm font từ Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Container cho giao diện React -->
+    <div id="ui-root"></div>
 
-</head>
-<body>
+    <!-- Container cho game 3D (ẩn mặc định) -->
     <div id="root-window">
-        <div id="render-target"></div>
+      <div id="render-target"></div>
     </div>
 
-    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
-
+    <!-- Import map cho các module JavaScript của game -->
+    <script
+      async
+      src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"
+    ></script>
     <script type="importmap">
-    {
+      {
         "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
-            "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/",
-            "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js",
-            "rapier3d": "https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.17.3"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+          "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/",
+          "rapier3d": "https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.17.3"
         }
-    }
+      }
     </script>
 
+    <!-- Thêm CDN cho React và ReactDOM -->
+    <script
+      src="https://unpkg.com/react@18/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+
+    <!-- Thêm Babel để biên dịch JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Liên kết đến file game logic chính -->
     <script type="module" src="src/main.js"></script>
-</body>
+
+    <!-- Liên kết đến file UI React (với type="text/babel") -->
+    <script type="text/babel" src="src/ui.js"></script>
+  </body>
 </html>
