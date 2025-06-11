@@ -76,14 +76,8 @@ function setupThreeJS(renderTarget) {
     directionalLight.shadow.normalBias = 0.5;
 
     // Hiển thị vùng camera đổ bóng
-    const shadowCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-    scene.add(shadowCameraHelper);
-
-    // Helpers (Bỏ comment để hiển thị, hoặc xóa để loại bỏ)
-    // const axesHelper = new THREE.AxesHelper(5);
-    // scene.add(axesHelper);
-    // const gridHelper = new THREE.GridHelper(50, 50, 0x0000ff, 0x808080);
-    // scene.add(gridHelper);
+    // const shadowCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    // scene.add(shadowCameraHelper);
 
     // Xử lý thay đổi kích thước cửa sổ
     window.addEventListener('resize', () => {

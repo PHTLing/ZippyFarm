@@ -25,11 +25,9 @@ export class SceneManager {
             'Z','I','P','P_1','Y','F','A','R','M',
 
             'plane', 'Sign','mailbox', 'haystack', 'cart',
-            'gate', 'dog_bow', 'water_can', 'Hoe','Hoe_1',
+            'gate', 'dog_bow', 'water_can', 'Hoe','Hoe_1','fisshingrod', 'Bucket_5', 'pond_1','pond_2',
             'Bridge-wooden-lighter', 'Bridge-wooden-lighter_1', 'dock_wide',
-            'lantern_1','lantern_2','lantern_3','lantern_4','lantern_5','lantern_6','lantern_7','lantern_8','lantern_9','lantern_10','lantern_11','lantern_12','lantern_13','lantern_14','lantern_15','lantern_16','lantern_17','lantern_18','lantern_19',
-            
-            
+            'lantern_1','lantern_2','lantern_3','lantern_4','lantern_5','lantern_6','lantern_7','lantern_8','lantern_9','lantern_10','lantern_11','lantern_12','lantern_13','lantern_14','lantern_15','lantern_16','lantern_17','lantern_18','lantern_19', 
 
             'rock','Cliff_Rock','Cliff_Rock_1','Cliff_Rock_2', 'Cliff_Rock_3',
             'tree','tree_1','tree_2','tree_3',
@@ -38,19 +36,22 @@ export class SceneManager {
             'apple', 'apple_1', 'apple_2', 'apple_3', 'apple_4', 'apple_5', 'apple_6', 'apple_7', 'apple_8', 'apple_9', 'apple_10','apple_11','apple_12','apple_13','apple_14','apple_15',
             'orange','orange_1','orange_2','orange_3','orange_4','orange_5','orange_6','orange_7','orange_8','orange_9','orange_10','orange_11','orange_12','orange_13','orange_14','orange_15',
 
-
-            'dog',
-            
-            'Fence-Sheep_1',
+            'dog', 'duck', 'duck_1', 'duck_2', 'duck_3', 'duck_4',
             
         ];
         this.FALLABLE_OBJECT_NAMES = [
-            'Z','I','P','P_1','Y','F','A','R','M','Fence-Sheep_1',
+            'Z','I','P','P_1','Y','F','A','R','M',
+            'dog_bow','water_can','Hoe','Hoe_1', 
+            'mailbox','fisshingrod', 'Bucket_5'
         ];
         this.STATIC_TRIMESH_NAMES = [
-            'plane','rock','Cliff_Rock_1','Cliff_Rock_2', 'Cliff_Rock_3', 'Cliff_Rock_4', 'plane'
+            'plane','rock','Cliff_Rock_1','Cliff_Rock_2', 'Cliff_Rock_3', 'Cliff_Rock_4'
         ];
-        this.STATIC_NOMESH_NAMES = ['street', 'path', 'path001', 'path002', 'path003', 'river', 'pond', 'grass_base_1'];
+        this.STATIC_NOMESH_NAMES = [
+            'street', 'path', 'path001', 'path002', 'path003', 
+            'river', 'pond', 'grass_base_1',
+            'pond','pond_3','pond_4','pond_5','pond_6',
+        ];
 
         this.gltfObjectsMap = new Map();
 
@@ -65,10 +66,6 @@ export class SceneManager {
         const farmLoadPromise = this.loadFarm();
 
         await Promise.all([truckLoadPromise, farmLoadPromise]);
-
-        // Thêm ground debug mesh vào scene
-        // const groundDebugMesh = await this.physicsManager.setupWorld();
-        // this.scene.add(groundDebugMesh);
 
         this.updateDebugModeVisuals(); // Gọi sau khi tất cả assets đã được tải và gán physics info
 
@@ -183,7 +180,7 @@ export class SceneManager {
                     halfExtents: truckHalfExtents,
                     isDynamic: true,
                     friction: 1,
-                    restitution: 0.5,
+                    restitution: 0.1,
                     linearDamping: 0.05,
                     angularDamping: 0.2,
                     debugColor: 0xff00ff
@@ -279,7 +276,7 @@ export class SceneManager {
                             position: initialWorldPosition,
                             quaternion: initialWorldQuaternion,
                             friction: 0.9,
-                            restitution: 0.2,
+                            restitution: 0.1,
                             debugColor: 0xffa500,
                             isDynamic: this.FALLABLE_OBJECT_NAMES.includes(parentObject.name)
                         });
@@ -313,7 +310,7 @@ export class SceneManager {
                             halfExtents: new THREE.Vector3(size.x / 2, size.y / 2, size.z / 2),
                             isDynamic: false,
                             friction: 0.9,
-                            restitution: 0.2,
+                            restitution: 0.1,
                             debugColor: 0x00ff00
                         });
                         objectType = 'static_cuboid';
