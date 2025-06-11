@@ -7,65 +7,124 @@ export class ObjectFactory {
     }
 
     createTestObjects() {
-        // Thêm một quả cầu kiểm tra
-        const testSphereRadius = 0.5;
+
+        const textureLoader = new THREE.TextureLoader();
+        
+        const sphereTexturePath = 'assets/images/football.jpg';
+        const sphereTexture = textureLoader.load(sphereTexturePath);
+
+        // --- Quả bóng ---
+        const testSphereRadius = 1.0;
         const testSphereGeometry = new THREE.SphereGeometry(testSphereRadius, 16, 16);
-        const testSphereMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const testSphereMaterial = new THREE.MeshStandardMaterial({
+                                map: sphereTexture,
+                                color: 0xffffff 
+                            });
         const testSphereMesh = new THREE.Mesh(testSphereGeometry, testSphereMaterial);
-        testSphereMesh.position.set(-20, 10, 5);
+        testSphereMesh.position.set(-50, 3, 0);
         this.scene.add(testSphereMesh);
 
         const { rigidBody: testSphereRigidBody, debugMesh: testSphereDebugMesh } = this.physicsManager.createSphere({
             position: testSphereMesh.position,
             radius: testSphereRadius,
             isDynamic: true,
-            friction: 0.9,
-            restitution: 0.5,
+            friction: 0.1,
+            restitution: 0.1,
             debugColor: 0x00ff00,
-            mesh: testSphereMesh // Đã thêm: truyền mesh vào đây
+            mesh: testSphereMesh 
         });
         testSphereMesh.userData.rigidBody = testSphereRigidBody; // Lưu rigidBody vào mesh để dễ truy cập
 
-        // Thêm một hình cầu đỏ nhỏ tại vị trí ban đầu dự kiến của xe tải (để kiểm tra)
-        const helperGeometry = new THREE.SphereGeometry(0.2, 8, 8);
-        const helperMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const helperMesh = new THREE.Mesh(helperGeometry, helperMaterial);
-        helperMesh.position.set(-5, 0.5, -5);
-        // this.scene.add(helperMesh);
+        // Bức tường hình chữ nhật  (tường vuông)
+        const boxTexturePath = 'assets/images/box.jpg';
+        const boxTexture = textureLoader.load(boxTexturePath);
 
-        // --- Các đối tượng phụ trợ (khối block, trụ, cầu) ---
-        const blockSize = 1;
-        const wallRows = 5;
-        const wallCols = 5;
-        const wallStartX = -(wallCols * blockSize) / 2 - 10;
-        const wallStartY = blockSize / 2;
-        const wallStartZ = 30;
+        const baseSize = 1;
 
-        for (let i = 0; i < wallRows; i++) {
-            for (let j = 0; j < wallCols; j++) {
-                const geometry = new THREE.BoxGeometry(blockSize, blockSize, blockSize);
-                const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        const boxWidth = baseSize;       
+        const boxHeight = baseSize;       
+        const boxLength = baseSize * 1.5; 
+
+        const wallRows = 5; 
+        const wallCols = 4; 
+
+        const wallStartX = -150;
+        const wallStartY = boxHeight / 2 ;
+
+        const wallStartZ = -(wallRows * boxLength) / 2 + 2; 
+
+        for (let i = 0; i < wallCols; i++) {
+            for (let j = 0; j < wallRows; j++) {
+
+                const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxLength);
+                const material = new THREE.MeshStandardMaterial({
+                                map: boxTexture,
+                                color: 0xffffff 
+                            });
                 const mesh = new THREE.Mesh(geometry, material);
-                const x = wallStartX + j * blockSize + blockSize / 2;
-                const y = wallStartY + i * blockSize;
-                const z = wallStartZ;
+
+                const x = wallStartX;
+                const y = wallStartY + i * boxHeight;
+                const z = wallStartZ + j * boxLength + boxLength / 2; 
+
                 mesh.position.set(x, y, z);
                 this.scene.add(mesh);
 
+
                 const { rigidBody } = this.physicsManager.createBox({
                     position: mesh.position,
-                    halfExtents: new THREE.Vector3(blockSize / 2, blockSize / 2, blockSize / 2),
+                    halfExtents: new THREE.Vector3(boxWidth / 2, boxHeight / 2, boxLength / 2),
                     isDynamic: true,
                     friction: 0.9,
-                    restitution: 0.5,
+                    restitution: 0.1,
                     debugColor: 0x00ff00,
                     mesh: mesh
                 });
                 mesh.userData.rigidBody = rigidBody;
             }
         }
-        const textureLoader = new THREE.TextureLoader();
-        const cylinderTexturePath = 'assets/images/image.png';
+
+        // --- Tạo bức tường hình chóp (pyramid wall) ---
+        const pyramidBaseBlocks = 5; 
+        const pyramidStartX = -20; // X cố định
+        const pyramidStartZ = -3;   // Z sẽ thay đổi theo tầng
+
+        for (let layer = 0; layer < pyramidBaseBlocks; layer++) {
+            const blocksInCurrentLayer = pyramidBaseBlocks - layer;
+            const currentLayerLength = blocksInCurrentLayer * boxLength;
+            const baseLayerLength = pyramidBaseBlocks * boxLength;
+            const offsetZ = (baseLayerLength - currentLayerLength) / 2;
+
+            for (let blockIndex = 0; blockIndex < blocksInCurrentLayer; blockIndex++) {
+                const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxLength);
+                const material = new THREE.MeshStandardMaterial({
+                    map: boxTexture,
+                    color: 0xffffff 
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+
+                const x = pyramidStartX; // cố định
+                const y = (boxHeight / 2) + (layer * boxHeight); // tầng chồng lên theo Y
+                const z = pyramidStartZ + offsetZ + (blockIndex * boxLength) + (boxLength / 2);
+
+                mesh.position.set(x, y, z);
+                this.scene.add(mesh);
+
+                const { rigidBody } = this.physicsManager.createBox({
+                    position: mesh.position,
+                    halfExtents: new THREE.Vector3(boxWidth / 2, boxHeight / 2, boxLength / 2),
+                    isDynamic: true, 
+                    friction: 0.9,
+                    restitution: 0.1,
+                    debugColor: 0xff00ff,
+                    mesh: mesh
+                });
+                mesh.userData.rigidBody = rigidBody;
+            }
+        }
+
+
+        const cylinderTexturePath = 'assets/images/straw.jpg';
         const cylinderTexture = textureLoader.load(cylinderTexturePath);
 
         const objectCountPerStack = 2; // Number of cylinders to stack at each position
@@ -81,9 +140,9 @@ export class ObjectFactory {
                     const radialSegments = 32;
                     const geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
                     const material = new THREE.MeshStandardMaterial({
-                        map: cylinderTexture,
-                        color: 0xffffff 
-                    });
+                                map: cylinderTexture,
+                                color: 0xffffff 
+                            });
                     const mesh = new THREE.Mesh(geometry, material);
 
                     // Calculate x and z positions for the square
@@ -149,29 +208,6 @@ export class ObjectFactory {
                 debugColor: 0x00ff00,
                 mesh: mesh,
                 rotation: mesh.rotation // Pass the rotation to the physics body
-            });
-            mesh.userData.rigidBody = rigidBody;
-        }
-
-        for (let i = 0; i < 2; i++) {
-            const radius = 0.5;
-            const geometry = new THREE.SphereGeometry(radius, 16, 16);
-            const material = new THREE.MeshStandardMaterial({ color: 0x0099ff });
-            const mesh = new THREE.Mesh(geometry, material);
-            const x = 20;
-            const y = 2 + i * 1.2;
-            const z = 5;
-            mesh.position.set(x, y, z);
-            this.scene.add(mesh);
-
-            const { rigidBody } = this.physicsManager.createSphere({
-                position: mesh.position,
-                radius: radius,
-                isDynamic: true,
-                friction: 0.9,
-                restitution: 0.5,
-                debugColor: 0x0099ff,
-                mesh: mesh // Đã thêm: truyền mesh vào đây
             });
             mesh.userData.rigidBody = rigidBody;
         }

@@ -30,7 +30,7 @@ export class PhysicsManager {
         const groundColliderDesc = this.RAPIER.ColliderDesc.cuboid(0, 0.05, 0)
             .setTranslation(0, -0.05, 0)
             .setFriction(0.9)
-            .setRestitution(0.2)
+            .setRestitution(0.0)
             .setActiveEvents(this.RAPIER.ActiveEvents.COLLISION_EVENTS);
         const groundCollider = this.world.createCollider(groundColliderDesc);
 
