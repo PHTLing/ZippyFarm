@@ -62,6 +62,24 @@ export class SceneManager {
                 this.scene.add(this.truckMesh);
                 this.truckMesh.visible = true; 
 
+                // Thay đổi màu phần Skin thành màu hồng
+                const skinMesh = this.truckMesh.getObjectByName("Skin");
+                if (skinMesh && skinMesh.isMesh) {
+                    // Tạo hoặc sửa material thành màu hồng
+                    if (Array.isArray(skinMesh.material)) {
+                        skinMesh.material.forEach(mat => {
+                            mat.color.set(0xff69b4); // màu hồng
+                            mat.needsUpdate = true;
+                        });
+                    } else {
+                        skinMesh.material.color.set(0xff69b4);
+                        skinMesh.material.needsUpdate = true;
+                    }
+                } else {
+                    console.warn("Không tìm thấy mesh 'Skin' trong mô hình Truck");
+                }
+
+
                 // Đảm bảo tất cả vật liệu của truckMesh đều trong suốt
                 this.truckMesh.traverse((child) => {
                     if (child.isMesh) {
@@ -147,7 +165,7 @@ export class SceneManager {
 
     async loadFarm() {
         return new Promise((resolve, reject) => {
-            this.loader.load('assets/models/Farm_N.glb', (gltf) => {
+            this.loader.load('assets/models/Map_Farm.glb', (gltf) => {
                 const farmScene = gltf.scene;
                 farmScene.position.set(0, 0, 0);
                 farmScene.updateMatrixWorld(true);
