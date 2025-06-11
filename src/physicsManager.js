@@ -27,7 +27,7 @@ export class PhysicsManager {
         this.eventQueue = new this.RAPIER.EventQueue(true);
 
         // Mặt phẳng nền (Ground)
-        const groundColliderDesc = this.RAPIER.ColliderDesc.cuboid(100, 0.05, 100)
+        const groundColliderDesc = this.RAPIER.ColliderDesc.cuboid(0, 0.05, 0)
             .setTranslation(0, -0.05, 0)
             .setFriction(0.9)
             .setRestitution(0.2)
@@ -36,7 +36,7 @@ export class PhysicsManager {
 
         // Debug visual cho mặt đất (có thể được thêm vào scene bởi SceneManager)
         const groundDebug = new THREE.Mesh(
-            new THREE.BoxGeometry(200, 0.1, 200),
+            new THREE.BoxGeometry(0, 0.1, 0),
             new THREE.MeshBasicMaterial({ color: 0x8BC34A, wireframe: false, transparent: true, opacity: 1.0 })
         );
         groundDebug.position.y = -0.05;
@@ -288,7 +288,7 @@ export class PhysicsManager {
                 // LẤY VẬN TỐC HIỆN TẠI CỦA XE TẢI
                 const truckLinvel = this.truckInfo.rigidBody.linvel();
                 const truckSpeed = Math.sqrt(truckLinvel.x * truckLinvel.x + truckLinvel.y * truckLinvel.y + truckLinvel.z * truckLinvel.z);
-                console.log(truckSpeed)
+                // console.log(truckSpeed)
 
                 // CHỈ PHÁT ÂM THANH NẾU VẬN TỐC ĐỦ LỚN
                 if (truckSpeed < this.impactThreshold) {
@@ -318,7 +318,7 @@ export class PhysicsManager {
                         const truckPosition = this.truckInfo.rigidBody.translation();
                         const otherObjectPosition = otherRigidBody.translation();
 
-                        this.soundManager.playCollisionSound();
+                        if (objectName !== 'plane'){this.soundManager.playCollisionSound();}
 
                         const bounceDirection = new this.RAPIER.Vector3(
                             truckPosition.x - otherObjectPosition.x,

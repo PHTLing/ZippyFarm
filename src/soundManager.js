@@ -22,7 +22,7 @@ export class SoundManager {
             const buffer = await this.audioLoader.loadAsync('assets/sounds/backgroundMusic.mp3'); 
             this.backgroundMusic.setBuffer(buffer);
             this.backgroundMusic.setLoop(true);
-            this.backgroundMusic.setVolume(0.1);
+            this.backgroundMusic.setVolume(0);
         } catch (error) {
             console.error('Lỗi khi tải âm thanh nhạc nền:', error);
         }
@@ -66,7 +66,7 @@ export class SoundManager {
             const buffer = await this.audioLoader.loadAsync('assets/sounds/engine.MP3'); 
             this.engineSound.setBuffer(buffer);
             this.engineSound.setLoop(true);
-            this.engineSound.setVolume(0.3); 
+            this.engineSound.setVolume(0.1); 
         } catch (error) {
             console.error('Lỗi khi tải âm thanh động cơ:', error);
         }
@@ -150,7 +150,7 @@ export class SoundManager {
     updateEngineVolumeAndPitch(speed, maxSpeed, volumeBoost = 1) {
         if (this.engineSound) {
             const normalizedSpeed = Math.min(Math.abs(speed) / maxSpeed, 1.0);
-            let baseVolume = normalizedSpeed * 0.25;                // Tính toán âm lượng cơ bản
+            let baseVolume = normalizedSpeed * 0.1;                // Tính toán âm lượng cơ bản
             this.engineSound.setVolume(baseVolume * volumeBoost);   // Áp dụng volumeBoost vào âm lượng
             this.engineSound.setPlaybackRate(0.8 + normalizedSpeed * 0.4);
         }

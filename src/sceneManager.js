@@ -21,12 +21,41 @@ export class SceneManager {
         this.isDebugMode = false;
 
         this.TRIMESH_PARENT_NAMES = [
-            'Nui_01', 'Cay01', 'Cay_02', 'Cay_03', 'CotDen','plane','Plane', 'duck', 'Z','I','P','I','N','G','F','A','R','M', 'Bridge-wooden-lighter001'
+            'Z','I','P','P_1','Y','F','A','R','M',
+
+            'plane', 'Sign','mailbox', 'haystack', 'cart',
+            'gate', 'dog_bow', 'water_can', 'Hoe','Hoe_1',
+            'Bridge-wooden-lighter', 'Bridge-wooden-lighter_1', 'dock_wide',
+            'lantern_1','lantern_2','lantern_3','lantern_4','lantern_5','lantern_6','lantern_7','lantern_8','lantern_9','lantern_10','lantern_11','lantern_12','lantern_13','lantern_14','lantern_15','lantern_16','lantern_17','lantern_18','lantern_19',
+            
+            
+
+            'rock','Cliff_Rock','Cliff_Rock_1','Cliff_Rock_2', 'Cliff_Rock_3',
+            'tree','tree_1','tree_2','tree_3',
+            'beet','beet_1','beet_2','beet_3','beet_4','beet_5','beet_6','beet_7','beet_8','beet_9',
+            'BananaTree', 'BananaTree_1', 'BananaTree_2', 'BananaTree_3', 'BananaTree_4', 'BananaTree_5',
+            'apple', 'apple_1', 'apple_2', 'apple_3', 'apple_4', 'apple_5', 'apple_6', 'apple_7', 'apple_8', 'apple_9', 'apple_10','apple_11','apple_12','apple_13','apple_14','apple_15',
+            'orange','orange_1','orange_2','orange_3','orange_4','orange_5','orange_6','orange_7','orange_8','orange_9','orange_10','orange_11','orange_12','orange_13','orange_14','orange_15',
+
+
+            'dog',
+            
+            'Fence-Sheep_1',
+            
         ];
-        this.FALLABLE_OBJECT_NAMES = ['Cay01', 'Cay_02', 'Cay_03', 'CotDen', 'duck', 'Z','I','P','I','N','G','F','A','R','M'];
-        this.STATIC_TRIMESH_NAMES = ['Nui_01', 'plane', 'Bridge-wooden-lighter001'];
+        this.FALLABLE_OBJECT_NAMES = [
+            'Z','I','P','P_1','Y','F','A','R','M','Fence-Sheep_1',
+        ];
+        this.STATIC_TRIMESH_NAMES = [
+            'plane','rock','Cliff_Rock_1','Cliff_Rock_2', 'Cliff_Rock_3', 'Cliff_Rock_4', 'plane'
+        ];
+        this.STATIC_NOMESH_NAMES = ['street', 'path', 'path001', 'path002', 'path003', 'river', 'pond', 'grass_base_1'];
 
         this.gltfObjectsMap = new Map();
+
+        // Thêm các biến để lưu trữ trạng thái ban đầu của xe tải
+        this.initialTruckPosition = new THREE.Vector3();
+        this.initialTruckQuaternion = new THREE.Quaternion();
     }
 
     async loadAssets() {
@@ -58,18 +87,20 @@ export class SceneManager {
             this.loader.load('assets/models/Truck.glb', (gltf) => {
                 this.truckMesh = gltf.scene;
                 this.truckMesh.scale.set(1, 1, 1);
-                this.truckMesh.position.set(-10, 15, -10);
+                this.truckMesh.position.set(0, 5, 0);
                 this.scene.add(this.truckMesh);
                 this.truckMesh.visible = true; 
 
                 // Đảm bảo tất cả vật liệu của truckMesh đều trong suốt
                 this.truckMesh.traverse((child) => {
+                    child.castShadow = true; 
+                    child.receiveShadow = true;
+                    
                     if (child.isMesh) {
                         const materials = Array.isArray(child.material) ? child.material : [child.material];
                         materials.forEach(mat => {
                             if (mat) {
-                                mat.transparent = true; // RẤT QUAN TRỌNG: cho phép opacity hoạt động
-                                // mat.opacity = 1.0; // Giữ opacity ban đầu
+                                mat.transparent = true;
                                 mat.needsUpdate = true;
                             }
                         });
@@ -135,7 +166,7 @@ export class SceneManager {
                 this.truckColliderHandle = collider.handle;
 
                 this.physicsManager.setTruckPhysics(this.truckMesh, rigidBody, collider, debugMesh);
-                console.log("Truck rigid body type:", this.truckRigidBody.bodyType());
+                // console.log("Truck rigid body type:", this.truckRigidBody.bodyType());
                 
                 resolve();
             }, undefined, (error) => {
@@ -147,22 +178,38 @@ export class SceneManager {
 
     async loadFarm() {
         return new Promise((resolve, reject) => {
-            this.loader.load('assets/models/Farm_N.glb', (gltf) => {
+            this.loader.load('assets/models/Map_Farm.glb', (gltf) => {
                 const farmScene = gltf.scene;
-                farmScene.position.set(0, 0, 0);
+                farmScene.position.set(0, 1, 0);
                 farmScene.updateMatrixWorld(true);
                 this.scene.add(farmScene);
 
                 farmScene.children.forEach((parentObject) => {
+                    if (this.STATIC_NOMESH_NAMES.includes(parentObject.name)) {
+                        console.log(`Bỏ qua tạo collider cho đối tượng NOMESH: ${parentObject.name}`);
+                        // Đảm bảo đối tượng này vẫn hiển thị nếu bạn muốn
+                        parentObject.traverse((obj) => {
+                            if (obj.isMesh) {
+                                obj.visible = true; // Vẫn hiển thị mesh
+                                // Có thể chỉnh opacity hoặc màu nếu cần debug
+                            }
+                        });
+                        return; // Bỏ qua đối tượng này, không tạo collider
+                    }
+
                     parentObject.traverse((obj) => {
                         if (obj.isMesh) {
                             obj.visible = true;
+
+                            obj.castShadow = true;
+                            obj.receiveShadow = true;
+
                             // Đảm bảo tất cả vật liệu của Farm đều trong suốt
                             const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
                             materials.forEach(mat => {
                                 if (mat) {
                                     mat.transparent = true; // RẤT QUAN TRỌNG: cho phép opacity hoạt động
-                                    // mat.opacity = 1.0; // Giữ opacity ban đầu
+                                    mat.opacity = 1.0; // Giữ opacity ban đầu
                                     mat.needsUpdate = true;
                                 }
                             });

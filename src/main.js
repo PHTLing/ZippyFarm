@@ -33,17 +33,50 @@ function setupThreeJS(renderTarget) {
     renderer.setSize(renderTarget.clientWidth, renderTarget.clientHeight);
     renderTarget.appendChild(renderer.domElement);
 
+    // 1. BẬT BÓNG ĐỔ CHO RENDERER
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
     controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0.5, 0);
     controls.update();
     controls.enabled = false; // Tắt điều khiển camera mặc định khi bắt đầu
 
-    // Ánh sáng cơ bản
-    const ambientLight = new THREE.AmbientLight(0x404040, 5);
+    // 2. THIẾT LẬP ÁNH SÁNG CÓ KHẢ NĂNG ĐỔ BÓNG
+    // Ánh sáng môi trường (không đổ bóng
+    const ambientLight = new THREE.AmbientLight(0x404040,1);
     scene.add(ambientLight);
+
+    // Ánh sáng định hướng (mặt trời)
     const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-    directionalLight.position.set(5, 10, 7.5).normalize();
+    directionalLight.position.set(100, 50, 50);
+    directionalLight.target.position.set(50, 0, 0);
     scene.add(directionalLight);
+    scene.add(directionalLight.target);
+
+    // BẬT ĐỔ BÓNG CHO ĐÈN ĐỊNH HƯỚNG
+    directionalLight.castShadow = true;
+
+    // Cấu hình Camera cho bóng đổ của DirectionalLight
+    // Đây là một OrthographicCamera, xác định vùng mà bóng đổ được tính toán
+    directionalLight.shadow.mapSize.width = 1024; // Độ phân giải bóng đổ (2048 hoặc 4096 cho chất lượng cao)
+    directionalLight.shadow.mapSize.height = 1024; // Càng cao càng rõ, nhưng tốn hiệu năng
+
+    const d = 170;
+    directionalLight.shadow.camera.left = -d;
+    directionalLight.shadow.camera.right = d;
+    directionalLight.shadow.camera.top = d;
+    directionalLight.shadow.camera.bottom = -d;
+
+    directionalLight.shadow.camera.near = 1;
+    directionalLight.shadow.camera.far = 300;
+
+    directionalLight.shadow.bias = -0.001;     // Thử với giá trị nhỏ, thường là âm
+    directionalLight.shadow.normalBias = 0.5;
+
+    // Hiển thị vùng camera đổ bóng
+    const shadowCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    scene.add(shadowCameraHelper);
 
     // Helpers (Bỏ comment để hiển thị, hoặc xóa để loại bỏ)
     // const axesHelper = new THREE.AxesHelper(5);
@@ -108,7 +141,6 @@ async function init() {
         wheelLMesh,
         wheelRMesh,
         backWheelsMesh,
-        // soundManager
     );
 
     // Điều khiển xe bằng bàn phím
@@ -145,20 +177,6 @@ async function init() {
             soundManager.stopHornPressSound();
         }
     });
-
-    // // Thêm listener cho sự kiện va chạm vật lý để phát âm thanh
-    // physicsManager.eventQueue.drainCollisionEvents = (handle1, handle2, started) => {
-    //     // Gọi hàm xử lý va chạm chính của PhysicsManager
-    //     physicsManager.handleCollisionEventsInternal(handle1, handle2, started);
-
-    //     // Phát âm thanh va chạm nếu va chạm bắt đầu và là giữa xe tải và một vật thể khác
-    //     if (started) {
-    //         const truckColliderHandle = physicsManager.getTruckColliderHandle();
-    //         if (truckColliderHandle && (handle1 === truckColliderHandle || handle2 === truckColliderHandle)) {
-    //             soundManager.playCollisionSound();
-    //         }
-    //     }
-    // };
 
     // Bắt đầu vòng lặp render
     animate();
@@ -204,7 +222,7 @@ function animate() {
         // Cập nhật vị trí camera theo xe tải
         const truckPosition = physicsManager.getTruckRigidBody().translation();
         const truckPos = new THREE.Vector3(truckPosition.x, truckPosition.y, truckPosition.z);
-        const cameraOffset = new THREE.Vector3(-15, 10, 20);
+        const cameraOffset = new THREE.Vector3(15, 10, 20);
         const desiredCameraPos = truckPos.clone().add(cameraOffset);
 
         camera.position.lerp(desiredCameraPos, 0.1);

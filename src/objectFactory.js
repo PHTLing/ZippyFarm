@@ -64,39 +64,96 @@ export class ObjectFactory {
                 mesh.userData.rigidBody = rigidBody;
             }
         }
+        const textureLoader = new THREE.TextureLoader();
+        const cylinderTexturePath = 'assets/images/image.png';
+        const cylinderTexture = textureLoader.load(cylinderTexturePath);
 
-        const objectCount = 5;
+        const objectCountPerStack = 2; // Number of cylinders to stack at each position
+        const squareSide = 2; // For a 2x2 square formation
 
-        for (let i = 0; i < objectCount; i++) {
-            const radiusTop = 0.5;
-            const radiusBottom = 0.5;
-            const height = 1;
-            const radialSegments = 16;
+        // --- Create the 2x2 square formation with stacked cylinders ---
+        for (let row = 0; row < squareSide; row++) {
+            for (let col = 0; col < squareSide; col++) {
+                for (let i = 0; i < objectCountPerStack; i++) {
+                    const radiusTop = 1;
+                    const radiusBottom = 1;
+                    const height = 2;
+                    const radialSegments = 32;
+                    const geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
+                    const material = new THREE.MeshStandardMaterial({
+                        map: cylinderTexture,
+                        color: 0xffffff 
+                    });
+                    const mesh = new THREE.Mesh(geometry, material);
+
+                    // Calculate x and z positions for the square
+                    const x = -40 + col * 2.5; // Adjust spacing as needed
+                    const y = 3 + i * height; // Stack vertically based on height
+                    const z = -90 + row * 2.5; // Adjust spacing as needed
+
+                    mesh.position.set(x, y, z);
+                    this.scene.add(mesh);
+
+                    const { rigidBody } = this.physicsManager.createCylinder({
+                        position: mesh.position,
+                        radiusTop: radiusTop,
+                        radiusBottom: radiusBottom,
+                        height: height,
+                        radialSegments: radialSegments,
+                        isDynamic: true,
+                        friction: 0.5,
+                        restitution: 0.1,
+                        debugColor: 0xffaa00,
+                        mesh: mesh
+                    });
+                    mesh.userData.rigidBody = rigidBody;
+                }
+            }
+        }
+
+        // --- Create the horizontal cylinder outside the formation ---
+        {
+            const radiusTop = 1;
+            const radiusBottom = 1;
+            const height = 2; // This is the height of the cylinder along its local Y-axis
+            const radialSegments = 32;
             const geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radialSegments);
-            const material = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
+            const material = new THREE.MeshStandardMaterial({
+                map: cylinderTexture,
+                color: 0xffffff
+            });
             const mesh = new THREE.Mesh(geometry, material);
-            const x = -10;
-            const y = 2 + i * 1.2;
-            const z = 5;
+
+            // Position for the horizontal cylinder
+            const x = -35; // Further out on X
+            const y = 1; // Close to the ground
+            const z = -90; // Slightly offset on Z
+
             mesh.position.set(x, y, z);
+
+            // Rotate the cylinder to be horizontal
+            // To make it lie on its side, rotate it 90 degrees around the Z-axis
+            mesh.rotation.z = Math.PI / 2; // 90 degrees in radians
+
             this.scene.add(mesh);
 
             const { rigidBody } = this.physicsManager.createCylinder({
                 position: mesh.position,
                 radiusTop: radiusTop,
                 radiusBottom: radiusBottom,
-                height: height,
-                radialSegments: radialSegments,
+                height: height, // Use original height for physics body, and let physics engine handle rotation
+                radialSegments: radialSegments, // Not strictly needed for physics, but might be part of the createCylinder signature
                 isDynamic: true,
                 friction: 0.9,
-                restitution: 0.5,
-                debugColor: 0xffaa00,
-                mesh: mesh // Đã thêm: truyền mesh vào đây
+                restitution: 0.1,
+                debugColor: 0x00ff00,
+                mesh: mesh,
+                rotation: mesh.rotation // Pass the rotation to the physics body
             });
             mesh.userData.rigidBody = rigidBody;
         }
 
-        for (let i = 0; i < objectCount; i++) {
+        for (let i = 0; i < 2; i++) {
             const radius = 0.5;
             const geometry = new THREE.SphereGeometry(radius, 16, 16);
             const material = new THREE.MeshStandardMaterial({ color: 0x0099ff });
