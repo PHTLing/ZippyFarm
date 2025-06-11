@@ -64,8 +64,9 @@ export class SceneManager {
     async loadAssets() {
         const truckLoadPromise = this.loadTruck();
         const farmLoadPromise = this.loadFarm();
+        const cloudLoadPromise = this.loadCloud();
 
-        await Promise.all([truckLoadPromise, farmLoadPromise]);
+        await Promise.all([truckLoadPromise, farmLoadPromise, cloudLoadPromise]);
 
         this.updateDebugModeVisuals(); // Gọi sau khi tất cả assets đã được tải và gán physics info
 
@@ -79,14 +80,73 @@ export class SceneManager {
             wheelLMesh: this.wheelLMesh,
             wheelRMesh: this.wheelRMesh,
             backWheelsMesh: this.backWheelsMesh,
-            
+            cloud: this.cloud
         };
     }
 
     update(delta) {
         this.mixers.forEach((mixer) => mixer.update(delta));
     }
+    async loadCloud() {
+        return new Promise((resolve, reject) => {
+            this.loader.load('assets/models/Cloud.glb', (gltf) => {
+                const cloud = gltf.scene;
+                cloud.position.set(-50, -10, -10); // Điều chỉnh vị trí tùy ý
+                this.scene.add(cloud);
 
+                // Tạo AnimationMixer riêng biệt cho cloud
+                const cloudMixer = new THREE.AnimationMixer(cloud);
+                this.mixers.push(cloudMixer); // Danh sách chung cho update
+
+                // Phát tất cả animation (loop liên tục)
+                gltf.animations.forEach((clip) => {
+                    const action = cloudMixer.clipAction(clip);
+                    action.loop = THREE.LoopRepeat;
+                    action.play();
+                });
+
+                // Lưu tham chiếu nếu cần xử lý sau
+                this.cloud = {
+                    mesh: cloud,
+                    mixer: cloudMixer,
+                    clips: gltf.animations,
+                };
+
+                resolve();
+            }, undefined, (error) => {
+                console.error('Lỗi khi tải cloud.glb:', error);
+                reject(error);
+            });
+        });
+    }
+
+    async loadBackground() {
+        return new Promise((resolve, reject) => {
+            const loader = new THREE.CubeTextureLoader();
+            loader.setPath('assets/skybox/');
+
+            loader.load(
+                [
+                    'px.jpg', // +X
+                    'nx.jpg', // -X
+                    'py.jpg', // +Y
+                    'ny.jpg', // -Y
+                    'pz.jpg', // +Z
+                    'nz.jpg', // -Z
+                ],
+                (cubeTexture) => {
+                    this.scene.background = cubeTexture;
+                    this.scene.environment = cubeTexture; // Giúp phản xạ vật thể
+                    resolve();
+                },
+                undefined,
+                (error) => {
+                    console.error('Lỗi khi tải skybox:', error);
+                    reject(error);
+                }
+            );
+        });
+    }
     async loadTruck() {
         return new Promise((resolve, reject) => {
             this.loader.load('assets/models/Truck.glb', (gltf) => {
