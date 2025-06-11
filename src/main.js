@@ -45,25 +45,52 @@ function setupThreeJS(renderTarget) {
   controls.target.set(0, 0.5, 0);
   controls.update();
   controls.enabled = false;
-  const ambientLight = new THREE.AmbientLight(0x404040, 1);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); // Tăng cường độ & dùng màu trắng
   scene.add(ambientLight);
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-  directionalLight.position.set(100, 50, 50);
-  directionalLight.target.position.set(50, 0, 0);
-  scene.add(directionalLight);
-  scene.add(directionalLight.target);
+
+  // Thêm ánh sáng DirectionalLight
+  // const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+  // directionalLight.position.set(100, 50, 50);
+  // directionalLight.target.position.set(50, 0, 0);
+  // scene.add(directionalLight);
+  // scene.add(directionalLight.target);
+  // directionalLight.castShadow = true;
+  // directionalLight.shadow.mapSize.width = 1024;
+  // directionalLight.shadow.mapSize.height = 1024;
+  // const d = 170;
+  // directionalLight.shadow.camera.left = -d;
+  // directionalLight.shadow.camera.right = d;
+  // directionalLight.shadow.camera.top = d;
+  // directionalLight.shadow.camera.bottom = -d;
+  // directionalLight.shadow.camera.near = 1;
+  // directionalLight.shadow.camera.far = 300;
+  // directionalLight.shadow.bias = -0.001;
+  // directionalLight.shadow.normalBias = 0.5;
+  const directionalLight = new THREE.DirectionalLight(0xfff3e0, 2); // màu ánh sáng hơi vàng ấm
+  directionalLight.position.set(80, 100, 50);
   directionalLight.castShadow = true;
-  directionalLight.shadow.mapSize.width = 1024;
-  directionalLight.shadow.mapSize.height = 1024;
-  const d = 170;
+
+  // Đổ bóng mềm hơn, tránh tối gắt
+  directionalLight.shadow.mapSize.set(2048, 2048);
+  directionalLight.shadow.bias = -0.0005;
+  directionalLight.shadow.normalBias = 0.3;
+
+  // Camera chiếu bóng rộng hơn nếu cần
+  const d = 200;
   directionalLight.shadow.camera.left = -d;
   directionalLight.shadow.camera.right = d;
   directionalLight.shadow.camera.top = d;
   directionalLight.shadow.camera.bottom = -d;
   directionalLight.shadow.camera.near = 1;
-  directionalLight.shadow.camera.far = 300;
-  directionalLight.shadow.bias = -0.001;
-  directionalLight.shadow.normalBias = 0.5;
+  directionalLight.shadow.camera.far = 500;
+
+  scene.add(directionalLight);
+
+  // Them ánh sáng HemisphereLight
+  const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.6);
+  scene.add(hemisphereLight);
+
+
   window.addEventListener("resize", () => {
     if (!renderer) return;
     const newWidth = renderTarget.clientWidth;

@@ -150,7 +150,7 @@ const VehicleSelectionScreen = ({ onSelect, onBack }) => {
       </div>
       <div className="button-group">
         <button className="game-button" onClick={onBack}>
-          Back
+          BACK
         </button>
         <button className="game-button primary" onClick={handleSelection}>
           SELECTION
