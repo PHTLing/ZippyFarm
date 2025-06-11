@@ -1,243 +1,329 @@
 // --- Import các thư viện và module khác ---
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import * as RAPIER from 'rapier3d';
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import * as RAPIER from "rapier3d";
 
-import { SceneManager } from './sceneManager.js';
-import { TruckController } from './truckController.js';
-import { PhysicsManager } from './physicsManager.js';
-import { ObjectFactory } from './objectFactory.js';
-import { SoundManager } from './soundManager.js';
+import { SceneManager } from "./sceneManager.js";
+import { TruckController } from "./truckController.js";
+import { PhysicsManager } from "./physicsManager.js";
+import { ObjectFactory } from "./objectFactory.js";
+import { SoundManager } from "./soundManager.js";
 
-// --- Biến toàn cục (nếu cần thiết cho việc truy cập từ bên ngoài) ---
+// --- Biến toàn cục ---
 let scene, camera, renderer, controls;
-let physicsManager;
-let truckController;
-let sceneManager; 
-let soundManager;
+let physicsManager, truckController, sceneManager, soundManager;
 let keyboardState = {};
-
-// --- Cài đặt ban đầu của Three.js ---
-function setupThreeJS(renderTarget) {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xaaaaaa);
-
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(-20, 15, 30); 
-    camera.lookAt(new THREE.Vector3(0, 0.5, 0));
-
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    if (!renderTarget) {
-        console.error("Lỗi: Không tìm thấy phần tử 'render-target'.");
-        return;
-    }
-    renderer.setSize(renderTarget.clientWidth, renderTarget.clientHeight);
-    renderTarget.appendChild(renderer.domElement);
-
-    // 1. BẬT BÓNG ĐỔ CHO RENDERER
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 0.5, 0);
-    controls.update();
-    controls.enabled = false; // Tắt điều khiển camera mặc định khi bắt đầu
-
-    // 2. THIẾT LẬP ÁNH SÁNG CÓ KHẢ NĂNG ĐỔ BÓNG
-    // Ánh sáng môi trường (không đổ bóng
-    const ambientLight = new THREE.AmbientLight(0x404040,1);
-    scene.add(ambientLight);
-
-    // Ánh sáng định hướng (mặt trời)
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-    directionalLight.position.set(100, 50, 50);
-    directionalLight.target.position.set(50, 0, 0);
-    scene.add(directionalLight);
-    scene.add(directionalLight.target);
-
-    // BẬT ĐỔ BÓNG CHO ĐÈN ĐỊNH HƯỚNG
-    directionalLight.castShadow = true;
-
-    // Cấu hình Camera cho bóng đổ của DirectionalLight
-    // Đây là một OrthographicCamera, xác định vùng mà bóng đổ được tính toán
-    directionalLight.shadow.mapSize.width = 1024; // Độ phân giải bóng đổ (2048 hoặc 4096 cho chất lượng cao)
-    directionalLight.shadow.mapSize.height = 1024; // Càng cao càng rõ, nhưng tốn hiệu năng
-
-    const d = 170;
-    directionalLight.shadow.camera.left = -d;
-    directionalLight.shadow.camera.right = d;
-    directionalLight.shadow.camera.top = d;
-    directionalLight.shadow.camera.bottom = -d;
-
-    directionalLight.shadow.camera.near = 1;
-    directionalLight.shadow.camera.far = 300;
-
-    directionalLight.shadow.bias = -0.001;     // Thử với giá trị nhỏ, thường là âm
-    directionalLight.shadow.normalBias = 0.5;
-
-    // Hiển thị vùng camera đổ bóng
-    // const shadowCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-    // scene.add(shadowCameraHelper);
-
-    // Xử lý thay đổi kích thước cửa sổ
-    window.addEventListener('resize', () => {
-        const newWidth = renderTarget.clientWidth;
-        const newHeight = renderTarget.clientHeight;
-        camera.aspect = newWidth / newHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(newWidth, newHeight);
-    });
-}
-
-// --- Hàm khởi tạo chính của ứng dụng ---
-async function init() {
-    const renderTarget = document.getElementById('render-target');
-    setupThreeJS(renderTarget);
-
-    // Khởi tạo SoundManager và tải âm thanh
-    soundManager = new SoundManager(camera);
-    await soundManager.loadSounds(); // Chờ tất cả âm thanh được tải
-    soundManager.playBackgroundMusic(); // Phát nhạc nền khi game bắt đầu
-
-    // Khởi tạo PhysicsManager
-    physicsManager = new PhysicsManager(RAPIER, soundManager);
-    const groundDebugMesh = await physicsManager.setupWorld();
-    scene.add(groundDebugMesh); 
-
-    // Khởi tạo SceneManager và tải các mô hình GLTF
-    sceneManager = new SceneManager(scene, physicsManager);
-
-    // Cập nhật cách nhận các giá trị trả về từ loadAssets
-    const { 
-        truckMesh, 
-        gltfObjectsMap, 
-        truckColliderHandle,
-        frontWheelLGroup, 
-        frontWheelRGroup, 
-        wheelLMesh,       
-        wheelRMesh,       
-        backWheelsMesh,
-        mixers  
-    } = await sceneManager.loadAssets();
-    physicsManager.setGltfObjectsMap(gltfObjectsMap);
-    
-    // Khởi tạo ObjectFactory để thêm các vật thể kiểm tra
-    const objectFactory = new ObjectFactory(scene, physicsManager);
-    objectFactory.createTestObjects(); // Tạo các khối, trụ, cầu
-
-    // Khởi tạo TruckController
-    // TRUYỀN THAM CHIẾU BÁNH XE VÀO TRUCKCONTROLLER
-    truckController = new TruckController(
-        truckMesh, 
-        physicsManager.getTruckRigidBody(), 
-        physicsManager.getTruckColliderHandle(), 
-        physicsManager,
-        frontWheelLGroup,
-        frontWheelRGroup,
-        wheelLMesh,
-        wheelRMesh,
-        backWheelsMesh,
-    );
-
-    // Điều khiển xe bằng bàn phím
-    window.addEventListener('keydown', (event) => {
-        keyboardState[event.code] = true;
-        if (event.key === 'p' || event.key === 'P') {
-            sceneManager.toggleDebugMode();
-        }
-        if (event.code === 'KeyO') {
-            controls.enabled = !controls.enabled;
-            // Tắt điều khiển xe khi bật OrbitControls
-            if (controls.enabled) {
-                truckController.resetMovement();
-            }
-        }
-        // Thêm logic phát còi
-        if (event.code === 'KeyH') {
-            soundManager.playHornClickSound();
-            soundManager.playHornPressSound();
-        }
-        // Phát âm thanh phanh khi nhấn Space
-        if (event.code === 'Space') {
-            const currentLinVel = physicsManager.getTruckRigidBody().linvel();
-            const currentSpeed = Math.sqrt(currentLinVel.x * currentLinVel.x + currentLinVel.z * currentLinVel.z);
-            if (currentSpeed > 0.1) { // Chỉ phát phanh nếu xe đang có tốc độ
-                soundManager.playBrakeSound();
-            }
-        }
-    });
-    window.addEventListener('keyup', (event) => {
-        keyboardState[event.code] = false;
-
-        if (event.code === 'KeyH') {
-            soundManager.stopHornPressSound();
-        }
-    });
-
-    // Bắt đầu vòng lặp render
-    animate();
-}
-
-
-const smoothedTruckPos = new THREE.Vector3(); // Cho camera mượt mà
+let animationFrameId = null;
 const clock = new THREE.Clock();
-function animate() {
-    requestAnimationFrame(animate);
+const smoothedTruckPos = new THREE.Vector3();
+let cameraMode = 0;
 
-    // Phát animation cho các mô hình GLTF
-    const delta = clock.getDelta();
-    if (sceneManager) {
-        sceneManager.update(delta); // Cập nhật animation
-    }
+// Biến lưu trữ lựa chọn xe hiện tại để reset
+let currentVehicleOptions = null;
 
-    // Cập nhật vật lý
-    physicsManager.updatePhysics();
-
-    // Cập nhật vị trí các đối tượng 3D từ vật lý
-    physicsManager.updateThreeJSObjects();
-
-    // Xử lý di chuyển xe tải
-    if (!controls.enabled) {
-        truckController.handleMovement(keyboardState);
-
-        // Lấy vận tốc hiện tại của xe tải
-        const currentLinVel = physicsManager.getTruckRigidBody().linvel();
-        const currentSpeed = Math.sqrt(currentLinVel.x * currentLinVel.x + currentLinVel.z * currentLinVel.z);
-        const truckMaxSpeed = truckController.truckSpeed * (keyboardState['KeyB'] ? 1.5 : 1); // Lấy max speed hiện tại có boost
-
-        // Điều khiển âm thanh động cơ
-        const isMoving = Math.abs(currentSpeed) > 0.1; // Ngưỡng để xác định xe đang di chuyển
-        const hasMovementInput = keyboardState['ArrowUp'] || keyboardState['KeyW'] || keyboardState['ArrowDown'] || keyboardState['KeyS'];
-
-        let volumeBoostFactor = 1;
-        if (keyboardState['KeyB']) {
-            volumeBoostFactor = 1.5;
-        }
-
-        if (isMoving || hasMovementInput) {
-            soundManager.playEngineSound();
-            // Truyền volumeBoostFactor vào hàm updateEngineVolumeAndPitch
-            soundManager.updateEngineVolumeAndPitch(currentSpeed, truckMaxSpeed, volumeBoostFactor); 
-        } else {
-            soundManager.stopEngineSound();
-        }
-
-        // Cập nhật vị trí camera theo xe tải
-        const truckPosition = physicsManager.getTruckRigidBody().translation();
-        const truckPos = new THREE.Vector3(truckPosition.x, truckPosition.y, truckPosition.z);
-        const cameraOffset = new THREE.Vector3(15, 10, 20);
-        const desiredCameraPos = truckPos.clone().add(cameraOffset);
-
-        camera.position.lerp(desiredCameraPos, 0.1);
-        smoothedTruckPos.lerp(truckPos, 0.1);
-        camera.lookAt(smoothedTruckPos);
-    } else {
-        controls.update(); // Cập nhật OrbitControls
-        soundManager.stopEngineSound();
-    }
-
-    renderer.render(scene, camera);
+// --- Cài đặt Three.js ---
+function setupThreeJS(renderTarget) {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xaaaaaa);
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  camera.position.set(-20, 15, 30);
+  camera.lookAt(new THREE.Vector3(0, 0.5, 0));
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: "high-performance",
+  });
+  renderer.setSize(renderTarget.clientWidth, renderTarget.clientHeight);
+  renderTarget.appendChild(renderer.domElement);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0.5, 0);
+  controls.update();
+  controls.enabled = false;
+  const ambientLight = new THREE.AmbientLight(0x404040, 1);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+  directionalLight.position.set(100, 50, 50);
+  directionalLight.target.position.set(50, 0, 0);
+  scene.add(directionalLight);
+  scene.add(directionalLight.target);
+  directionalLight.castShadow = true;
+  directionalLight.shadow.mapSize.width = 1024;
+  directionalLight.shadow.mapSize.height = 1024;
+  const d = 170;
+  directionalLight.shadow.camera.left = -d;
+  directionalLight.shadow.camera.right = d;
+  directionalLight.shadow.camera.top = d;
+  directionalLight.shadow.camera.bottom = -d;
+  directionalLight.shadow.camera.near = 1;
+  directionalLight.shadow.camera.far = 300;
+  directionalLight.shadow.bias = -0.001;
+  directionalLight.shadow.normalBias = 0.5;
+  window.addEventListener("resize", () => {
+    if (!renderer) return;
+    const newWidth = renderTarget.clientWidth;
+    const newHeight = renderTarget.clientHeight;
+    camera.aspect = newWidth / newHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(newWidth, newHeight);
+  });
 }
 
-// Gọi hàm khởi tạo khi cửa sổ đã tải
-window.onload = init;
+// --- Logic Game ---
+window.startGame = async function (vehicleOptions) {
+  // Lưu lại lựa chọn xe để có thể reset
+  currentVehicleOptions = vehicleOptions;
+
+  const renderTarget = document.getElementById("render-target");
+  if (!renderTarget) {
+    console.error("Lỗi: Không tìm thấy 'render-target'.");
+    return;
+  }
+  while (renderTarget.firstChild) {
+    renderTarget.removeChild(renderTarget.firstChild);
+  }
+  setupThreeJS(renderTarget);
+  soundManager = new SoundManager(camera);
+  await soundManager.loadSounds();
+  soundManager.playBackgroundMusic();
+  physicsManager = new PhysicsManager(RAPIER, soundManager);
+  const groundDebugMesh = await physicsManager.setupWorld();
+  scene.add(groundDebugMesh);
+  sceneManager = new SceneManager(scene, physicsManager);
+  const {
+    truckMesh,
+    gltfObjectsMap,
+    truckColliderHandle,
+    frontWheelLGroup,
+    frontWheelRGroup,
+    wheelLMesh,
+    wheelRMesh,
+    backWheelsMesh,
+  } = await sceneManager.loadAssets(vehicleOptions);
+  physicsManager.setGltfObjectsMap(gltfObjectsMap);
+  const objectFactory = new ObjectFactory(scene, physicsManager);
+  objectFactory.createTestObjects();
+  truckController = new TruckController(
+    truckMesh,
+    physicsManager.getTruckRigidBody(),
+    truckColliderHandle,
+    physicsManager,
+    frontWheelLGroup,
+    frontWheelRGroup,
+    wheelLMesh,
+    wheelRMesh,
+    backWheelsMesh
+  );
+
+  // Xóa listener cũ trước khi thêm mới để tránh bị gọi nhiều lần
+  window.removeEventListener("keydown", handleKeyDown);
+  window.removeEventListener("keyup", handleKeyUp);
+  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("keyup", handleKeyUp);
+
+  if (!animationFrameId) {
+    animate();
+  }
+};
+
+// --- Hàm dọn dẹp hoàn toàn tài nguyên game ---
+function cleanupGame() {
+  console.log("Bắt đầu dọn dẹp tài nguyên game...");
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+
+  window.removeEventListener("keydown", handleKeyDown);
+  window.removeEventListener("keyup", handleKeyUp);
+
+  if (soundManager) {
+    soundManager.stopAllSounds();
+  }
+
+  if (physicsManager && physicsManager.world) {
+    physicsManager.world.free();
+  }
+
+  if (scene) {
+    while (scene.children.length > 0) {
+      const child = scene.children[0];
+      scene.remove(child);
+      // Dọn dẹp sâu hơn để giải phóng bộ nhớ
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach((material) => material.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    }
+  }
+
+  if (renderer) {
+    renderer.dispose();
+    if (renderer.domElement && renderer.domElement.parentElement) {
+      renderer.domElement.parentElement.removeChild(renderer.domElement);
+    }
+  }
+
+  // Reset các biến quản lý về null
+  scene = null;
+  camera = null;
+  renderer = null;
+  controls = null;
+  physicsManager = null;
+  truckController = null;
+  sceneManager = null;
+  soundManager = null;
+  keyboardState = {};
+  console.log("Dọn dẹp hoàn tất.");
+}
+
+// --- Hàm thoát game ---
+window.exitGame = function () {
+  cleanupGame();
+  const event = new CustomEvent("exitToMenu");
+  window.dispatchEvent(event);
+};
+
+// --- Hàm tải lại game ---
+function reloadGame() {
+  console.log("Đang tải lại game...");
+  cleanupGame();
+  setTimeout(() => {
+    window.startGame(currentVehicleOptions);
+  }, 100);
+}
+
+// --- Xử lý sự kiện bàn phím ---
+function handleKeyDown(event) {
+  if (event.repeat) return;
+  keyboardState[event.code] = true;
+  if (event.key === "p" || event.key === "P")
+    if (sceneManager) sceneManager.toggleDebugMode();
+  if (event.code === "KeyO") {
+    cameraMode = (cameraMode + 1) % 3;
+    if (controls) controls.enabled = false;
+  }
+  if (event.code === "KeyR") {
+    reloadGame();
+  }
+  if (event.code === "KeyH")
+    if (soundManager) {
+      soundManager.playHornClickSound();
+      soundManager.playHornPressSound();
+    }
+  if (event.code === "Space") {
+    if (physicsManager && soundManager && physicsManager.getTruckRigidBody()) {
+      const currentLinVel = physicsManager.getTruckRigidBody().linvel();
+      const currentSpeed = Math.sqrt(
+        currentLinVel.x ** 2 + currentLinVel.z ** 2
+      );
+      if (currentSpeed > 0.1) soundManager.playBrakeSound();
+    }
+  }
+  if (event.key === "Escape") window.exitGame();
+}
+
+function handleKeyUp(event) {
+  keyboardState[event.code] = false;
+  if (event.code === "KeyH")
+    if (soundManager) soundManager.stopHornPressSound();
+}
+
+function updateCameraPosition() {
+  if (!physicsManager || !physicsManager.getTruckRigidBody()) return;
+  const truckRigidBody = physicsManager.getTruckRigidBody();
+  const truckPos = new THREE.Vector3().copy(truckRigidBody.translation());
+  const truckRot = truckRigidBody.rotation();
+  const truckQuat = new THREE.Quaternion(
+    truckRot.x,
+    truckRot.y,
+    truckRot.z,
+    truckRot.w
+  );
+  switch (cameraMode) {
+    case 0: {
+      const offset = new THREE.Vector3(15, 10, 20);
+      const desiredCameraPos = truckPos.clone().add(offset);
+      camera.position.lerp(desiredCameraPos, 0.1);
+      smoothedTruckPos.lerp(truckPos, 0.1);
+      camera.lookAt(smoothedTruckPos);
+      break;
+    }
+    case 1: {
+      const offset = new THREE.Vector3(0, 4, 12).applyQuaternion(truckQuat);
+      const desiredPos = truckPos.clone().add(offset);
+      camera.position.lerp(desiredPos, 0.1);
+      const lookAtPos = truckPos.clone().add(new THREE.Vector3(0, 2, 0));
+      camera.lookAt(lookAtPos);
+      break;
+    }
+    case 2: {
+      const offset = new THREE.Vector3(0, 3.5, -10).applyQuaternion(truckQuat);
+      const desiredPos = truckPos.clone().add(offset);
+      camera.position.lerp(desiredPos, 0.1);
+      const lookAtPos = truckPos.clone().add(new THREE.Vector3(0, 1.5, 0));
+      camera.lookAt(lookAtPos);
+      break;
+    }
+  }
+}
+
+function animate() {
+  animationFrameId = requestAnimationFrame(animate);
+  if (!renderer) return;
+
+  const delta = clock.getDelta();
+  if (sceneManager) sceneManager.update(delta);
+  if (physicsManager) {
+    physicsManager.updatePhysics();
+    physicsManager.updateThreeJSObjects();
+  }
+  if (truckController && controls && !controls.enabled) {
+    truckController.handleMovement(keyboardState);
+    if (physicsManager.getTruckRigidBody()) {
+      const currentLinVel = physicsManager.getTruckRigidBody().linvel();
+      const currentSpeed = Math.sqrt(
+        currentLinVel.x ** 2 + currentLinVel.z ** 2
+      );
+      const truckMaxSpeed =
+        truckController.truckSpeed * (keyboardState["KeyB"] ? 1.5 : 1);
+      const isMoving = Math.abs(currentSpeed) > 0.1;
+      const hasMovementInput =
+        keyboardState["ArrowUp"] ||
+        keyboardState["KeyW"] ||
+        keyboardState["ArrowDown"] ||
+        keyboardState["KeyS"];
+      let volumeBoostFactor = 1;
+      if (keyboardState["KeyB"]) volumeBoostFactor = 1.5;
+      if (soundManager) {
+        if (isMoving || hasMovementInput) {
+          soundManager.playEngineSound();
+          soundManager.updateEngineVolumeAndPitch(
+            currentSpeed,
+            truckMaxSpeed,
+            volumeBoostFactor
+          );
+        } else {
+          soundManager.stopEngineSound();
+        }
+      }
+    }
+    updateCameraPosition();
+  } else if (controls) {
+    controls.update();
+    if (soundManager) soundManager.stopEngineSound();
+  }
+
+  if (renderer && scene && camera) {
+    renderer.render(scene, camera);
+  }
+}

@@ -46,7 +46,7 @@ export class ObjectFactory {
         const boxLength = baseSize * 1.5; 
 
         const wallRows = 5; 
-        const wallCols = 4; 
+        const wallCols = 5; 
 
         const wallStartX = -150;
         const wallStartY = boxHeight / 2 ;
