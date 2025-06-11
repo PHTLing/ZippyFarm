@@ -7,6 +7,7 @@ export class SceneManager {
         this.physicsManager = physicsManager;
         
         this.loader = new GLTFLoader();
+        this.mixers = [];
 
         this.truckMesh = null;
         this.truckRigidBody = null;
@@ -58,6 +59,7 @@ export class SceneManager {
         this.initialTruckQuaternion = new THREE.Quaternion();
     }
 
+
     async loadAssets() {
         const truckLoadPromise = this.loadTruck();
         const farmLoadPromise = this.loadFarm();
@@ -70,6 +72,7 @@ export class SceneManager {
 
         this.updateDebugModeVisuals(); // Gọi sau khi tất cả assets đã được tải và gán physics info
 
+
         return {
             truckMesh: this.truckMesh,
             gltfObjectsMap: this.gltfObjectsMap,
@@ -78,13 +81,18 @@ export class SceneManager {
             frontWheelRGroup: this.frontWheelRGroup,
             wheelLMesh: this.wheelLMesh,
             wheelRMesh: this.wheelRMesh,
-            backWheelsMesh: this.backWheelsMesh
+            backWheelsMesh: this.backWheelsMesh,
+            
         };
+    }
+
+    update(delta) {
+        this.mixers.forEach((mixer) => mixer.update(delta));
     }
 
     async loadTruck() {
         return new Promise((resolve, reject) => {
-            this.loader.load('assets/models/Car.glb', (gltf) => {
+            this.loader.load('assets/models/Truck.glb', (gltf) => {
                 this.truckMesh = gltf.scene;
                 this.truckMesh.scale.set(1, 1, 1);
                 this.truckMesh.position.set(0, 5, 0);
@@ -201,6 +209,17 @@ export class SceneManager {
                 farmScene.position.set(0, 1, 0);
                 farmScene.updateMatrixWorld(true);
                 this.scene.add(farmScene);
+
+                // Lưu trữ mixers để cập nhật animation
+                const mixer = new THREE.AnimationMixer(farmScene);
+                this.mixers.push(mixer);
+
+                // Phát tất cả các animation
+                gltf.animations.forEach((clip) => {
+                    const action = mixer.clipAction(clip);
+                    action.loop = THREE.LoopRepeat;
+                    action.play();
+                });
 
                 farmScene.children.forEach((parentObject) => {
                     if (this.STATIC_NOMESH_NAMES.includes(parentObject.name)) {

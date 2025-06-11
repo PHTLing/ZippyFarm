@@ -13,6 +13,7 @@ import { SoundManager } from './soundManager.js';
 let scene, camera, renderer, controls;
 let physicsManager;
 let truckController;
+let sceneManager; 
 let soundManager;
 let keyboardState = {};
 
@@ -110,7 +111,7 @@ async function init() {
     scene.add(groundDebugMesh); 
 
     // Khởi tạo SceneManager và tải các mô hình GLTF
-    const sceneManager = new SceneManager(scene, physicsManager);
+    sceneManager = new SceneManager(scene, physicsManager);
 
     // Cập nhật cách nhận các giá trị trả về từ loadAssets
     const { 
@@ -121,7 +122,8 @@ async function init() {
         frontWheelRGroup, 
         wheelLMesh,       
         wheelRMesh,       
-        backWheelsMesh    
+        backWheelsMesh,
+        mixers  
     } = await sceneManager.loadAssets();
     physicsManager.setGltfObjectsMap(gltfObjectsMap);
     
@@ -184,8 +186,15 @@ async function init() {
 
 
 const smoothedTruckPos = new THREE.Vector3(); // Cho camera mượt mà
+const clock = new THREE.Clock();
 function animate() {
     requestAnimationFrame(animate);
+
+    // Phát animation cho các mô hình GLTF
+    const delta = clock.getDelta();
+    if (sceneManager) {
+        sceneManager.update(delta); // Cập nhật animation
+    }
 
     // Cập nhật vật lý
     physicsManager.updatePhysics();
