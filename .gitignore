@@ -2,4 +2,4 @@ node_modules/
 dist/
 .vscode/
 .env
-assets/models/*.glb
+assets/models/Map_Farm.glb
