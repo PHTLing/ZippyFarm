@@ -188,87 +188,92 @@ export class SceneManager {
     // THAY ĐỔI: Truyền `options` vào `loadTruck`
     const truckLoadPromise = this.loadTruck(options);
     const farmLoadPromise = this.loadFarm();
-        const cloudLoadPromise = this.loadCloud();
+    const cloudLoadPromise = this.loadCloud();
 
     await Promise.all([truckLoadPromise, farmLoadPromise, cloudLoadPromise]);
     this.updateDebugModeVisuals();
 
-        return {
-            truckMesh: this.truckMesh,
-            gltfObjectsMap: this.gltfObjectsMap,
-            truckColliderHandle: this.truckColliderHandle,
-            frontWheelLGroup: this.frontWheelLGroup,
-            frontWheelRGroup: this.frontWheelRGroup,
-            wheelLMesh: this.wheelLMesh,
-            wheelRMesh: this.wheelRMesh,
-            backWheelsMesh: this.backWheelsMesh,
-            cloud: this.cloud
-        };
-    }
+    return {
+      truckMesh: this.truckMesh,
+      gltfObjectsMap: this.gltfObjectsMap,
+      truckColliderHandle: this.truckColliderHandle,
+      frontWheelLGroup: this.frontWheelLGroup,
+      frontWheelRGroup: this.frontWheelRGroup,
+      wheelLMesh: this.wheelLMesh,
+      wheelRMesh: this.wheelRMesh,
+      backWheelsMesh: this.backWheelsMesh,
+      cloud: this.cloud,
+    };
+  }
 
   update(delta) {
     this.mixers.forEach((mixer) => mixer.update(delta));
   }
-    async loadCloud() {
-        return new Promise((resolve, reject) => {
-            this.loader.load('assets/models/Cloud.glb', (gltf) => {
-                const cloud = gltf.scene;
-                cloud.position.set(-50, -10, -10); // Điều chỉnh vị trí tùy ý
-                this.scene.add(cloud);
+  async loadCloud() {
+    return new Promise((resolve, reject) => {
+      this.loader.load(
+        "assets/models/Cloud.glb",
+        (gltf) => {
+          const cloud = gltf.scene;
+          cloud.position.set(-50, -10, -10); // Điều chỉnh vị trí tùy ý
+          this.scene.add(cloud);
 
-                // Tạo AnimationMixer riêng biệt cho cloud
-                const cloudMixer = new THREE.AnimationMixer(cloud);
-                this.mixers.push(cloudMixer); // Danh sách chung cho update
+          // Tạo AnimationMixer riêng biệt cho cloud
+          const cloudMixer = new THREE.AnimationMixer(cloud);
+          this.mixers.push(cloudMixer); // Danh sách chung cho update
 
-                // Phát tất cả animation (loop liên tục)
-                gltf.animations.forEach((clip) => {
-                    const action = cloudMixer.clipAction(clip);
-                    action.loop = THREE.LoopRepeat;
-                    action.play();
-                });
+          // Phát tất cả animation (loop liên tục)
+          gltf.animations.forEach((clip) => {
+            const action = cloudMixer.clipAction(clip);
+            action.loop = THREE.LoopRepeat;
+            action.play();
+          });
 
-                // Lưu tham chiếu nếu cần xử lý sau
-                this.cloud = {
-                    mesh: cloud,
-                    mixer: cloudMixer,
-                    clips: gltf.animations,
-                };
+          // Lưu tham chiếu nếu cần xử lý sau
+          this.cloud = {
+            mesh: cloud,
+            mixer: cloudMixer,
+            clips: gltf.animations,
+          };
 
-                resolve();
-            }, undefined, (error) => {
-                console.error('Lỗi khi tải cloud.glb:', error);
-                reject(error);
-            });
-        });
-    }
+          resolve();
+        },
+        undefined,
+        (error) => {
+          console.error("Lỗi khi tải cloud.glb:", error);
+          reject(error);
+        }
+      );
+    });
+  }
 
-    async loadBackground() {
-        return new Promise((resolve, reject) => {
-            const loader = new THREE.CubeTextureLoader();
-            loader.setPath('assets/skybox/');
+  async loadBackground() {
+    return new Promise((resolve, reject) => {
+      const loader = new THREE.CubeTextureLoader();
+      loader.setPath("assets/skybox/");
 
-            loader.load(
-                [
-                    'px.jpg', // +X
-                    'nx.jpg', // -X
-                    'py.jpg', // +Y
-                    'ny.jpg', // -Y
-                    'pz.jpg', // +Z
-                    'nz.jpg', // -Z
-                ],
-                (cubeTexture) => {
-                    this.scene.background = cubeTexture;
-                    this.scene.environment = cubeTexture; // Giúp phản xạ vật thể
-                    resolve();
-                },
-                undefined,
-                (error) => {
-                    console.error('Lỗi khi tải skybox:', error);
-                    reject(error);
-                }
-            );
-        });
-    }
+      loader.load(
+        [
+          "px.jpg", // +X
+          "nx.jpg", // -X
+          "py.jpg", // +Y
+          "ny.jpg", // -Y
+          "pz.jpg", // +Z
+          "nz.jpg", // -Z
+        ],
+        (cubeTexture) => {
+          this.scene.background = cubeTexture;
+          this.scene.environment = cubeTexture; // Giúp phản xạ vật thể
+          resolve();
+        },
+        undefined,
+        (error) => {
+          console.error("Lỗi khi tải skybox:", error);
+          reject(error);
+        }
+      );
+    });
+  }
   // THAY ĐỔI LỚN: Hàm `loadTruck` không còn cứng nữa mà đã được linh hoạt hóa.
   // - Nhận `vehicleOptions` làm tham số.
   // - Tải model và áp dụng tùy chỉnh dựa trên lựa chọn của người dùng.
@@ -369,10 +374,14 @@ export class SceneManager {
               quaternion: this.truckMesh.quaternion,
               halfExtents: truckHalfExtents,
               isDynamic: true,
-              friction: 1,
-              restitution: 0.1,
-              linearDamping: 0.05,
-              angularDamping: 0.2,
+              friction: 1.0, // Tăng ma sát để xe bám đường hơn
+              restitution: 0.05,
+              // THAY ĐỔI: Thêm các thuộc tính damping để giảm chuyển động không mong muốn
+              linearDamping: 0.5,
+              angularDamping: 1.5,
+              // THAY ĐỔI: Tăng trọng lực để mô phỏng xe tải nặng hơn
+              gravityScale: 3.0,
+              useCCD: true, // Sử dụng CCD để xử lý va chạm chính xác hơn
               debugColor: 0xff00ff,
             });
           this.truckRigidBody = rigidBody;
