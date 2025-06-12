@@ -61,19 +61,17 @@ const VehicleSelectionScreen = ({ onSelect, onBack, previewManager }) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [color, setColor] = useState("#ffdd00");
-
-  // THAY ĐỔI: Dùng state để quản lý file và URL của texture
   const [textureFile, setTextureFile] = useState(null);
   const [textureName, setTextureName] = useState("");
-
   const fileInputRef = useRef(null);
 
-  // useEffect để quản lý việc attach/detach
   useEffect(() => {
     if (previewManager) {
       previewManager.attach("vehicle-preview-canvas");
-      // Tải model ban đầu với màu hiện tại
-      previewManager.loadVehicle(vehicles[currentIndex].name, { color: color });
+      const customization = textureFile
+        ? { textureURL: URL.createObjectURL(textureFile) }
+        : { color: color };
+      previewManager.loadVehicle(vehicles[currentIndex].name, customization);
     }
     return () => {
       if (previewManager) {
@@ -82,42 +80,34 @@ const VehicleSelectionScreen = ({ onSelect, onBack, previewManager }) => {
     };
   }, [previewManager]);
 
-  // useEffect để tải lại model khi người dùng bấm next/prev
   useEffect(() => {
     if (previewManager) {
-      // Khi đổi xe, ưu tiên áp dụng texture nếu có, nếu không thì dùng màu hiện tại
       const customization = textureFile
         ? { textureURL: URL.createObjectURL(textureFile) }
         : { color: color };
       previewManager.loadVehicle(vehicles[currentIndex].name, customization);
     }
-  }, [currentIndex, previewManager]);
+  }, [currentIndex]);
 
-  // THÊM: useEffect để cập nhật MÀU SẮC cho model preview
   useEffect(() => {
-    // Chỉ cập nhật màu nếu manager đã sẵn sàng và KHÔNG có texture nào được chọn
     if (previewManager && !textureFile) {
       previewManager.applyCustomization({ color: color });
     }
-  }, [color, textureFile, previewManager]);
+  }, [color]);
 
-  // THÊM: useEffect để cập nhật TEXTURE cho model preview
   useEffect(() => {
     if (previewManager && textureFile) {
       const url = URL.createObjectURL(textureFile);
       previewManager.applyCustomization({ textureURL: url });
-
-      // Quan trọng: thu hồi URL cũ để tránh rò rỉ bộ nhớ
       return () => URL.revokeObjectURL(url);
     }
-  }, [textureFile, previewManager]);
+  }, [textureFile]);
 
   const handleNext = () =>
     setCurrentIndex((prev) => (prev + 1) % vehicles.length);
   const handlePrev = () =>
     setCurrentIndex((prev) => (prev - 1 + vehicles.length) % vehicles.length);
 
-  // THAY ĐỔI: Cập nhật state của texture
   const handleTextureUpload = (event) => {
     const file = event.target.files?.[0] || null;
     setTextureFile(file);
@@ -129,7 +119,6 @@ const VehicleSelectionScreen = ({ onSelect, onBack, previewManager }) => {
       type: vehicles[currentIndex].name,
       image: vehicles[currentIndex].image,
       color: color,
-      // Dùng textureFile từ state để tạo URL mới cho game chính
       texture: textureFile ? URL.createObjectURL(textureFile) : null,
     });
   };
@@ -203,8 +192,6 @@ const VehicleSelectionScreen = ({ onSelect, onBack, previewManager }) => {
 //================================================================
 const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
   const vehicleImage = vehicle.image;
-
-  // THAY ĐỔI: Thêm `isWide` prop cho KeyIcon
   const KeyIcon = ({ children, isWide }) => (
     <div className={`key-icon ${isWide ? "key-icon-wide" : ""}`}>
       {children}
@@ -223,7 +210,6 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
           />
         </div>
         <div className="controls-panel">
-          {/* Cột 1: Di chuyển */}
           <div className="control-group">
             <div className="control-row">
               <KeyIcon>W</KeyIcon>/<KeyIcon>↑</KeyIcon> - Move Forward
@@ -238,11 +224,9 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
               <KeyIcon>D</KeyIcon>/<KeyIcon>→</KeyIcon> - Turn Right
             </div>
             <div className="control-row">
-              {/* THAY ĐỔI: Thêm `isWide` prop */}
               <KeyIcon isWide={true}>SPACE</KeyIcon> - Brake
             </div>
           </div>
-          {/* Cột 2: Chức năng */}
           <div className="control-group">
             <div className="control-row">
               <KeyIcon>B</KeyIcon> - Boost
@@ -260,7 +244,6 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
               <KeyIcon>P</KeyIcon> - Debug Mode
             </div>
           </div>
-          {/* Cột 3: Hệ thống */}
           <div className="control-group">
             <div className="control-row">
               <KeyIcon>R</KeyIcon> - Reset Game
@@ -289,36 +272,60 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
 const App = () => {
   const [gameState, setGameState] = useState("loading");
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-
   const previewManagerRef = useRef(null);
+
+  // THÊM MỚI: State này sẽ hoạt động như một "key" để buộc component render lại
+  const [previewKey, setPreviewKey] = useState(0);
+
+  // useEffect để TẠO MỚI previewManager khi cần
   useEffect(() => {
-    if (!previewManagerRef.current && window.VehiclePreviewManager) {
-      previewManagerRef.current = new window.VehiclePreviewManager();
+    if (
+      !previewManagerRef.current &&
+      (gameState === "selectVehicle" || gameState === "loading")
+    ) {
+      if (window.VehiclePreviewManager) {
+        console.log("Tạo mới thực thể VehiclePreviewManager.");
+        previewManagerRef.current = new window.VehiclePreviewManager();
+        // Cập nhật key để buộc re-render component con
+        setPreviewKey((prevKey) => prevKey + 1);
+      }
     }
+  }, [gameState]);
+
+  // useEffect để DỌN DẸP previewManager khi thoát game
+  useEffect(() => {
+    const handleExit = () => {
+      // Bây giờ chúng ta sẽ chủ động dọn dẹp manager cũ
+      if (previewManagerRef.current) {
+        console.log("Dọn dẹp triệt để previewManager cũ để tạo lại.");
+        previewManagerRef.current.cleanup();
+        previewManagerRef.current = null;
+      }
+      // Sau khi dọn dẹp, chuyển về màn hình chọn xe.
+      // Effect ở trên sẽ tự động tạo một manager mới.
+      setGameState("selectVehicle");
+    };
+
+    window.addEventListener("exitToMenu", handleExit);
+    return () => window.removeEventListener("exitToMenu", handleExit);
   }, []);
 
+  // useEffect để quản lý ẩn/hiện UI và khởi động game
   useEffect(() => {
     const uiContainer = document.getElementById("ui-root");
     const gameContainer = document.getElementById("root-window");
 
-    // Luôn xử lý việc ẩn/hiện UI
     uiContainer.style.display = gameState === "inGame" ? "none" : "block";
     gameContainer.style.display = gameState === "inGame" ? "block" : "none";
 
-    // THAY ĐỔI: Chỉ gọi startGame() SAU KHI đã chắc chắn chuyển sang `inGame`
     if (gameState === "inGame") {
-      // Sử dụng requestAnimationFrame để đảm bảo DOM đã được cập nhật
       requestAnimationFrame(() => {
         if (window.startGame) {
           window.startGame(selectedVehicle);
         }
       });
     }
-
-    const handleExit = () => setGameState("selectVehicle");
-    window.addEventListener("exitToMenu", handleExit);
-    return () => window.removeEventListener("exitToMenu", handleExit);
-  }, [gameState]);
+  }, [gameState, selectedVehicle]);
 
   const handleVehicleSelect = (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -326,17 +333,18 @@ const App = () => {
   };
 
   const handleStartGame = () => {
-    // THAY ĐỔI: Hàm này bây giờ chỉ chịu trách nhiệm đổi state
     setGameState("inGame");
   };
 
   return (
-    <>
+    <React.Fragment>
       {gameState === "loading" && (
         <LoadingScreen onLoaded={() => setGameState("selectVehicle")} />
       )}
       {gameState === "selectVehicle" && (
         <VehicleSelectionScreen
+          // THÊM MỚI: Dùng state `previewKey` làm key cho component
+          key={previewKey}
           onSelect={handleVehicleSelect}
           onBack={() => setGameState("loading")}
           previewManager={previewManagerRef.current}
@@ -349,7 +357,7 @@ const App = () => {
           onChangeVehicle={() => setGameState("selectVehicle")}
         />
       )}
-    </>
+    </React.Fragment>
   );
 };
 
