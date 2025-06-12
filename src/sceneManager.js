@@ -410,7 +410,7 @@ export class SceneManager {
   async loadFarm() {
     return new Promise((resolve, reject) => {
       this.loader.load(
-        "assets/models/Map_Farm_test.glb",
+        "assets/models/Map_Farm.glb",
         (gltf) => {
           const farmScene = gltf.scene;
           farmScene.position.set(0, 1, 0);
