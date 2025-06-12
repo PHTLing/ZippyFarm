@@ -275,7 +275,7 @@ export class SceneManager {
         });
     });
 }
-  
+
 
   // THAY ĐỔI LỚN: Hàm `loadTruck` không còn cứng nữa mà đã được linh hoạt hóa.
   // - Nhận `vehicleOptions` làm tham số.
@@ -410,7 +410,7 @@ export class SceneManager {
   async loadFarm() {
     return new Promise((resolve, reject) => {
       this.loader.load(
-        "assets/models/Map_Farm.glb",
+        "assets/models/Map_Farm_test.glb",
         (gltf) => {
           const farmScene = gltf.scene;
           farmScene.position.set(0, 1, 0);
