@@ -203,7 +203,13 @@ const VehicleSelectionScreen = ({ onSelect, onBack, previewManager }) => {
 //================================================================
 const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
   const vehicleImage = vehicle.image;
-  const KeyIcon = ({ children }) => <div className="key-icon">{children}</div>;
+
+  // THAY ĐỔI: Thêm `isWide` prop cho KeyIcon
+  const KeyIcon = ({ children, isWide }) => (
+    <div className={`key-icon ${isWide ? "key-icon-wide" : ""}`}>
+      {children}
+    </div>
+  );
 
   return (
     <div className="screen instructions-screen">
@@ -217,6 +223,7 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
           />
         </div>
         <div className="controls-panel">
+          {/* Cột 1: Di chuyển */}
           <div className="control-group">
             <div className="control-row">
               <KeyIcon>W</KeyIcon>/<KeyIcon>↑</KeyIcon> - Move Forward
@@ -230,10 +237,15 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
             <div className="control-row">
               <KeyIcon>D</KeyIcon>/<KeyIcon>→</KeyIcon> - Turn Right
             </div>
+            <div className="control-row">
+              {/* THAY ĐỔI: Thêm `isWide` prop */}
+              <KeyIcon isWide={true}>SPACE</KeyIcon> - Brake
+            </div>
           </div>
+          {/* Cột 2: Chức năng */}
           <div className="control-group">
             <div className="control-row">
-              <KeyIcon>R</KeyIcon> - Reset Game
+              <KeyIcon>B</KeyIcon> - Boost
             </div>
             <div className="control-row">
               <KeyIcon>H</KeyIcon> - Horn
@@ -242,7 +254,16 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
               <KeyIcon>O</KeyIcon> - Change Camera
             </div>
             <div className="control-row">
+              <KeyIcon>V</KeyIcon> - View World
+            </div>
+            <div className="control-row">
               <KeyIcon>P</KeyIcon> - Debug Mode
+            </div>
+          </div>
+          {/* Cột 3: Hệ thống */}
+          <div className="control-group">
+            <div className="control-row">
+              <KeyIcon>R</KeyIcon> - Reset Game
             </div>
             <div className="control-row">
               <KeyIcon>ESC</KeyIcon> - Exit to Menu
@@ -279,13 +300,21 @@ const App = () => {
   useEffect(() => {
     const uiContainer = document.getElementById("ui-root");
     const gameContainer = document.getElementById("root-window");
+
+    // Luôn xử lý việc ẩn/hiện UI
+    uiContainer.style.display = gameState === "inGame" ? "none" : "block";
+    gameContainer.style.display = gameState === "inGame" ? "block" : "none";
+
+    // THAY ĐỔI: Chỉ gọi startGame() SAU KHI đã chắc chắn chuyển sang `inGame`
     if (gameState === "inGame") {
-      uiContainer.style.display = "none";
-      gameContainer.style.display = "block";
-    } else {
-      uiContainer.style.display = "block";
-      gameContainer.style.display = "none";
+      // Sử dụng requestAnimationFrame để đảm bảo DOM đã được cập nhật
+      requestAnimationFrame(() => {
+        if (window.startGame) {
+          window.startGame(selectedVehicle);
+        }
+      });
     }
+
     const handleExit = () => setGameState("selectVehicle");
     window.addEventListener("exitToMenu", handleExit);
     return () => window.removeEventListener("exitToMenu", handleExit);
@@ -297,9 +326,7 @@ const App = () => {
   };
 
   const handleStartGame = () => {
-    if (window.startGame) {
-      window.startGame(selectedVehicle);
-    }
+    // THAY ĐỔI: Hàm này bây giờ chỉ chịu trách nhiệm đổi state
     setGameState("inGame");
   };
 

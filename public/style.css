@@ -356,3 +356,10 @@ canvas {
 #vehicle-preview-canvas:active {
   cursor: grabbing;
 }
+
+.key-icon-wide {
+  width: auto; /* Cho phép chiều rộng tự động thay đổi theo nội dung */
+  min-width: 80px; /* Đặt chiều rộng tối thiểu */
+  padding-left: 15px;
+  padding-right: 15px;
+}
