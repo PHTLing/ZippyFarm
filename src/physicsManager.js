@@ -32,7 +32,7 @@ export class PhysicsManager {
     this.eventQueue = new this.RAPIER.EventQueue(true);
 
     // Mặt phẳng nền (Ground)
-    const groundColliderDesc = this.RAPIER.ColliderDesc.cuboid(0, 0.05, 0)
+    const groundColliderDesc = this.RAPIER.ColliderDesc.cuboid(0, 0.2, 0)
       .setTranslation(0, -0.05, 0)
       .setFriction(0.9)
       .setRestitution(0.0)

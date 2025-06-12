@@ -170,6 +170,10 @@ export class SceneManager {
       "pond_4",
       "pond_5",
       "pond_6",
+      "tomato_row",
+      "tomato_row_1",
+      "pumpkin_row",
+      "pumpkin_row_1"
     ];
 
     // XÓA: Các biến lưu trữ trạng thái ban đầu của xe tải đã được loại bỏ
@@ -378,10 +382,10 @@ export class SceneManager {
               halfExtents: truckHalfExtents,
               isDynamic: true,
               friction: 1.0, // Tăng ma sát để xe bám đường hơn
-              restitution: 0.05,
+              restitution: 0.1,
               // THAY ĐỔI: Thêm các thuộc tính damping để giảm chuyển động không mong muốn
-              linearDamping: 0.5,
-              angularDamping: 1.5,
+              linearDamping: 1.0,
+              angularDamping: 1.0,
               // THAY ĐỔI: Tăng trọng lực để mô phỏng xe tải nặng hơn
               gravityScale: 3.0,
               useCCD: true, // Sử dụng CCD để xử lý va chạm chính xác hơn
