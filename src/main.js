@@ -42,7 +42,9 @@ function setupThreeJS(renderTarget) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 0.5, 0);
+  controls.minPolarAngle = 0; // Góc thấp nhất là nhìn ngangAdd commentMore actions
+  controls.maxPolarAngle = Math.PI * 0.49; // Giới hạn góc nhìn không cho nhìn xuống dưới xe
+  controls.target.set(-80, 0.5, -80);
   controls.update();
   controls.enabled = false;
   const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); // Tăng cường độ & dùng màu trắng
@@ -238,6 +240,12 @@ function handleKeyDown(event) {
   if (event.code === "KeyO") {
     cameraMode = (cameraMode + 1) % 3;
     if (controls) controls.enabled = false;
+  }
+  if (event.code === 'KeyV') {
+    controls.enabled = !controls.enabled;   
+    if (controls.enabled) {
+      truckController.resetMovement();
+    }
   }
   if (event.code === "KeyR") {
     reloadGame();
