@@ -149,6 +149,8 @@ export class SceneManager {
     ];
     this.STATIC_TRIMESH_NAMES = [
       "plane",
+      "plane_1",
+      "sky",
       "rock",
       "Cliff_Rock_1",
       "Cliff_Rock_2",
@@ -189,8 +191,9 @@ export class SceneManager {
     const truckLoadPromise = this.loadTruck(options);
     const farmLoadPromise = this.loadFarm();
     const cloudLoadPromise = this.loadCloud();
+    const backgroundPanoramaPromise = this.loadBackgroundPanorama();
 
-    await Promise.all([truckLoadPromise, farmLoadPromise, cloudLoadPromise]);
+    await Promise.all([truckLoadPromise, farmLoadPromise, cloudLoadPromise, backgroundPanoramaPromise]);
     this.updateDebugModeVisuals();
 
     return {
@@ -247,33 +250,33 @@ export class SceneManager {
     });
   }
 
-  async loadBackground() {
+  async loadBackgroundPanorama() {
     return new Promise((resolve, reject) => {
-      const loader = new THREE.CubeTextureLoader();
-      loader.setPath("assets/skybox/");
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load('assets/images/Background.png', (texture) => {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            texture.colorSpace = THREE.SRGBColorSpace;
 
-      loader.load(
-        [
-          "px.jpg", // +X
-          "nx.jpg", // -X
-          "py.jpg", // +Y
-          "ny.jpg", // -Y
-          "pz.jpg", // +Z
-          "nz.jpg", // -Z
-        ],
-        (cubeTexture) => {
-          this.scene.background = cubeTexture;
-          this.scene.environment = cubeTexture; // Giúp phản xạ vật thể
-          resolve();
-        },
-        undefined,
-        (error) => {
-          console.error("Lỗi khi tải skybox:", error);
-          reject(error);
-        }
-      );
+            const skyGeo = new THREE.SphereGeometry(500, 60, 40);
+            const skyMat = new THREE.MeshBasicMaterial({
+                map: texture,
+                side: THREE.BackSide,
+                depthWrite: false,
+            });
+
+            const skyDome = new THREE.Mesh(skyGeo, skyMat);
+            skyDome.name = "SkyDome";
+            this.scene.add(skyDome);
+
+            resolve(skyDome);
+        }, undefined, (err) => {
+            console.error("Lỗi load background sky:", err);
+            reject(err);
+        });
     });
-  }
+}
+  
+
   // THAY ĐỔI LỚN: Hàm `loadTruck` không còn cứng nữa mà đã được linh hoạt hóa.
   // - Nhận `vehicleOptions` làm tham số.
   // - Tải model và áp dụng tùy chỉnh dựa trên lựa chọn của người dùng.

@@ -51,23 +51,6 @@ function setupThreeJS(renderTarget) {
   scene.add(ambientLight);
 
   // Thêm ánh sáng DirectionalLight
-  // const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-  // directionalLight.position.set(100, 50, 50);
-  // directionalLight.target.position.set(50, 0, 0);
-  // scene.add(directionalLight);
-  // scene.add(directionalLight.target);
-  // directionalLight.castShadow = true;
-  // directionalLight.shadow.mapSize.width = 1024;
-  // directionalLight.shadow.mapSize.height = 1024;
-  // const d = 170;
-  // directionalLight.shadow.camera.left = -d;
-  // directionalLight.shadow.camera.right = d;
-  // directionalLight.shadow.camera.top = d;
-  // directionalLight.shadow.camera.bottom = -d;
-  // directionalLight.shadow.camera.near = 1;
-  // directionalLight.shadow.camera.far = 300;
-  // directionalLight.shadow.bias = -0.001;
-  // directionalLight.shadow.normalBias = 0.5;
   const directionalLight = new THREE.DirectionalLight(0xfff3e0, 2); // màu ánh sáng hơi vàng ấm
   directionalLight.position.set(80, 100, 50);
   directionalLight.castShadow = true;
@@ -91,6 +74,18 @@ function setupThreeJS(renderTarget) {
   // Them ánh sáng HemisphereLight
   const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.6);
   scene.add(hemisphereLight);
+
+  // Thêm nền ảo
+  const infiniteGround = new THREE.Mesh(
+    new THREE.PlaneGeometry(1000, 1000),
+    new THREE.MeshStandardMaterial({
+        color: 0x6CBD07, // màu xanh dương
+    })
+  );
+  infiniteGround.rotation.x = -Math.PI / 2;
+  infiniteGround.position.y = -5; // thấp hơn map chính
+  scene.add(infiniteGround);
+
 
 
   window.addEventListener("resize", () => {
