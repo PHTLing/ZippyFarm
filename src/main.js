@@ -75,18 +75,6 @@ function setupThreeJS(renderTarget) {
   const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.6);
   scene.add(hemisphereLight);
 
-  // Thêm nền ảo
-  const infiniteGround = new THREE.Mesh(
-    new THREE.PlaneGeometry(1000, 1000),
-    new THREE.MeshStandardMaterial({
-        color: 0x6CBD07, // màu xanh dương
-    })
-  );
-  infiniteGround.rotation.x = -Math.PI / 2;
-  infiniteGround.position.y = -5; // thấp hơn map chính
-  scene.add(infiniteGround);
-
-
 
   window.addEventListener("resize", () => {
     if (!renderer) return;

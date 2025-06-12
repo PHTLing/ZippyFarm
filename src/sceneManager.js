@@ -279,7 +279,7 @@ export class SceneManager {
         });
     });
 }
-  
+
 
   // THAY ĐỔI LỚN: Hàm `loadTruck` không còn cứng nữa mà đã được linh hoạt hóa.
   // - Nhận `vehicleOptions` làm tham số.

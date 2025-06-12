@@ -256,7 +256,7 @@ const InstructionsScreen = ({ vehicle, onPlay, onChangeVehicle }) => {
       </div>
       <div className="button-group">
         <button className="game-button" onClick={onChangeVehicle}>
-          Change Vehicle
+          CHANGE VEHICLE
         </button>
         <button className="game-button primary" onClick={onPlay}>
           PLAY
