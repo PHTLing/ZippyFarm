@@ -137,7 +137,8 @@ npm install
 
 ### Thêm bản đồ nông trại
 
-> ⚠️ **Lưu ý:** File bản đồ `Map_Farm.glb` không được commit vào repository do dung lượng. Vui lòng tải file từ link được cung cấp riêng và đặt vào thư mục:
+> ⚠️ **Lưu ý:** File bản đồ `Map_Farm.glb` không được commit vào repository do dung lượng. Vui lòng tải file từ link drive: https://drive.google.com/drive/folders/1wzV0FBuH-QALzPLOBCgYBOOe0QxGYu4_?usp=drive_link
+Và đặt vào thư mục:
 ```
 ZippyFarm/assets/models/Map_Farm.glb
 ```
