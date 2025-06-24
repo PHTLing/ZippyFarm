@@ -24,7 +24,7 @@ export class TruckController {
     this.wheelRMesh = wheelRMesh; // Mesh để quay theo trục X (tiến/lùi)
     this.backWheelsMesh = backWheelsMesh; // Mesh (hoặc Group) để quay theo trục X (tiến/lùi)
 
-    this.truckSpeed = 25; // Tốc độ tiện tiến của bánh xe
+    this.truckSpeed = 25.0; // Tốc độ tiện tiến của bánh xe
     this.truckRotationSpeed = 3.0; // Tốc độ xoay của xe
 
     this.maxSteerAngle = Math.PI / 6; // Góc bẻ lái < 30 độ
@@ -35,7 +35,7 @@ export class TruckController {
     this.tempEuler = new THREE.Euler();
 
     // THÊM: Hằng số cho lực ép xuống
-    this.downforce = 8.0;
+    this.downforce = 2.0;
   }
 
   handleMovement(keyboardState) {
